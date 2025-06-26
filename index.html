@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConnectSphere Prospect CRM - Versão Completa</title>
+    <title><img src="LOGOTIPOV1.png" /></title>
     
     <!-- Tailwind CSS para estilização rápida e moderna -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -224,7 +224,7 @@
                     <ImportModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onImportSuccess={handleImportSuccess} />
                     <div className="h-screen w-screen flex flex-col bg-slate-50">
                         <header className="bg-white shadow-sm p-4 flex justify-between items-center border-b border-gray-200 flex-shrink-0">
-                            <div className="flex items-center"><svg className="h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg><h1 className="text-xl font-bold text-gray-800 ml-2">ConnectSphere Prospect</h1></div>
+                            <div className="flex items-center"><svg className="h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg><h1 className="text-xl font-bold text-gray-800 ml-2">Sphere Prospect</h1></div>
                             <nav className="flex items-center space-x-2"><NavButton viewName="dashboard" icon={Icons.dashboard}>Dashboard</NavButton><NavButton viewName="kanban" icon={Icons.kanban}>Kanban</NavButton><NavButton viewName="list" icon={Icons.list}>Lista</NavButton><NavButton viewName="tasks" icon={Icons.tasks}>Tarefas</NavButton></nav>
                             <div className="flex items-center space-x-4">
                                 <div className="relative group"><button className="px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-gray-700 hover:bg-gray-50">Exportar</button><div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10"><div className="py-1"><a href="#" onClick={(e) => { e.preventDefault(); handleExport('selected')}} className={`block px-4 py-2 text-sm ${selectedIds.length > 0 ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-400 cursor-not-allowed'}`}>Exportar {selectedIds.length} selecionados</a><a href="#" onClick={(e) => { e.preventDefault(); handleExport('filtered')}} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar esta vista</a><a href="#" onClick={(e) => { e.preventDefault(); handleExport('all')}} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Exportar todos</a></div></div></div>
