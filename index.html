@@ -206,12 +206,18 @@
             const handleExport = (type) => { let dataToExport; switch(type) { case 'selected': dataToExport = prospects.filter(p => selectedIds.includes(p.id)); break; case 'filtered': dataToExport = prospects; break;  case 'all': default: dataToExport = prospects; break; } if(dataToExport.length === 0) { alert("Nenhum contato para exportar."); return; } const headers = Object.keys(CRM_FIELD_LABELS).map(key => CRM_FIELD_LABELS[key]); const csvRows = [headers.join(',')]; dataToExport.forEach(row => { const values = CRM_FIELDS.map(field => { const val = row[field] || ''; const escaped = (''+val).replace(/"/g, '""'); return `"${escaped}"`; }); csvRows.push(values.join(',')); }); downloadCsv(csvRows.join('\n')); setSelectedIds([]); };
             const downloadCsv = (csvContent) => { const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); const url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", `export_contatos_${new Date().toISOString().split('T')[0]}.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); };
 
-            const renderView = () => {
-                switch (view) {
-                    case 'kanban': return <KanbanView prospects={prospects} users={users} tasks={tasks} onStatusChange={handleStatusChange} onCardClick={handleCardClick} />;
-                    case 'list': return <ListView prospects={prospects} users={users} tasks={tasks} onCardClick={handleCardClick} onSelect={handleSelectProspect} selectedIds={selectedIds} />;
-                    case 'tasks': return <TasksView tasks={tasks} prospects={prospects} users={users} onTaskToggle={handleTaskToggle} onCardClick={handleCardClick} />;
-                    case 'dashboard': default: return <DashboardView prospects={prospects} users={users} tasks={tasks} />;
+            <header className="bg-white shadow-sm p-4 flex justify-between items-center border-b border-gray-200 flex-shrink-0">
+  <div className="flex items-center">
+    <img src="/LOGOTIPOV1.png" alt="Logo do CRM" className="h-10 w-auto" />
+  </div>
+  <nav className="flex items-center space-x-2">
+    <NavButton viewName="dashboard" icon={Icons.dashboard}>Dashboard</NavButton>
+    <NavButton viewName="kanban" icon={Icons.kanban}>Kanban</NavButton>
+    <NavButton viewName="list" icon={Icons.list}>Lista</NavButton>
+    <NavButton viewName="tasks" icon={Icons.tasks}>Tarefas</NavButton>
+  </nav>
+  <!-- ... continua -->
+</header>
                 }
             };
             
