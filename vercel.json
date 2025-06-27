@@ -1,9 +1,19 @@
 {
-  "redirects": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/",
-      "destination": "/login.html",
-      "permanent": true
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "src/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
