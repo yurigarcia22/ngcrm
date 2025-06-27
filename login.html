@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso ao CRM - Firebase</title>
+    <style>
+        /* Estilos básicos para deixar a página mais amigável */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+        }
+        .login-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-sizing: border-box; /* Para incluir padding na largura */
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        input[type="email"],
+        input[type="password"] {
+            width: calc(100% - 20px); /* 100% menos o padding */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4285F4; /* Cor azul do Google */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #357ae8;
+        }
+        #message {
+            margin-top: 15px;
+            color: red;
+            font-weight: bold;
+        }
+        #welcomeMessage {
+            margin-top: 20px;
+            color: green;
+            font-weight: bold;
+        }
+        #signOutButton {
+            background-color: #f44336; /* Cor de logout */
+        }
+        #signOutButton:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Acesso ao CRM</h2>
+        <input type="email" id="emailInput" placeholder="Seu e-mail">
+        <input type="password" id="passwordInput" placeholder="Sua senha">
+        <button id="signInButton">Entrar</button>
+        <button id="signUpButton">Registrar</button>
+        <button id="signOutButton" style="display: none;">Sair</button>
