@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NG PROSPECT</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
@@ -24,21 +28,9 @@
             }
         }
     </script>
-
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
+    
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #F5F5F5; overflow: hidden; }
+        body { font-family: 'Poppins', sans-serif; background-color: #F5F5F5; color: #1a202c; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
@@ -51,177 +43,193 @@
             0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
             100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
         }
-        /* Estilos básicos para o formulário de login */
-        .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #202C6D; color: white; }
-        .login-form { display: flex; flex-direction: column; gap: 1rem; padding: 2rem; background-color: #FFFFFF; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 350px; }
-        .login-form h2 { color: #202C6D; text-align: center; font-size: 1.5rem; font-weight: 600; }
-        .login-form input { padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
-        .login-form button { padding: 0.75rem; background-color: #F75E67; color: white; border: none; border-radius: 4px; font-size: 1rem; cursor: pointer; transition: background-color 0.2s; }
+        .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #202C6D; }
+        .login-form { display: flex; flex-direction: column; gap: 1rem; padding: 2rem; background-color: #FFFFFF; border-radius: 8px; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); width: 90%; max-width: 380px; }
+        .login-form h2 { color: #202C6D; text-align: center; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .login-form input { padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 1rem; transition: border-color 0.2s, box-shadow 0.2s; }
+        .login-form input:focus { border-color: #202C6D; box-shadow: 0 0 0 2px rgba(32, 44, 109, 0.2); outline: none; }
+        .login-form button { padding: 0.75rem; background-color: #F75E67; color: white; border: none; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
         .login-form button:hover { background-color: #E65358; }
+        .loading-container { display: flex; align-items: center; justify-content: center; height: 100vh; background-color: #202C6D; color: white; font-size: 1.5rem; font-weight: 600; }
     </style>
 </head>
 
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo, Fragment } = React;
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-        // --- Inicializando o Supabase ---
+    <script type="text/babel">
+        const { useState, useEffect, Fragment } = React;
+
+        // --- 1. CONFIGURAÇÃO DO SUPABASE ---
         const supabaseUrl = 'https://ekzjsqheinpvebjfjims.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrempzcWhlaW5wdmViamZqaW1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5OTIzNDMsImV4cCI6MjA2NjU2ODM0M30.HrBFnV6ve6po2GeitFXs55ensNljsXs-1aSVwdKHDDA';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // CORREÇÃO: Usamos "supabaseClient" para evitar conflito com a variável global "supabase"
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- DADOS MOCKADOS E CONSTANTES (Ainda úteis para estrutura) ---
-        // (Mantendo apenas o que não vem do banco de dados)
-        const KANBAN_STAGES = ['Novo', 'Contato Inicial', 'Contato com Decisor', 'Proposta Enviada', 'Venda', 'Perdido', 'No Show'];
-
-        // --- COMPONENTES (Seu código de componentes aqui, não precisa mudar) ---
-        function Confetti() {
-            // ... seu componente de confete ...
-        }
-
+        // --- 2. COMPONENTE PRINCIPAL DA APLICAÇÃO ---
         function App() {
+            // Estados da aplicação
             const [user, setUser] = useState(null);
+            const [isLoading, setIsLoading] = useState(true);
+            const [prospects, setProspects] = useState([]);
+            
+            // Estados para o formulário de login
             const [email, setEmail] = useState("");
             const [password, setPassword] = useState("");
-            const [isLoading, setIsLoading] = useState(true); // NOVO: Estado de carregamento
-            const [prospects, setProspects] = useState([]); // INICIALMENTE VAZIO
             
-            // --- Seus outros estados ---
-            // const [tasks, setTasks] = useState([]);
-            // const [users] = useState([]); // Você pode carregar isso do Supabase também
-            const [showConfetti, setShowConfetti] = useState(false);
-            const [isModalOpen, setIsModalOpen] = useState(false);
-            const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-            const [selectedProspect, setSelectedProspect] = useState(null);
-            const [selectedIds, setSelectedIds] = useState([]);
+            // Estados para a sua UI (você pode adicionar mais aqui)
+            // const [isModalOpen, setIsModalOpen] = useState(false);
 
-
-            // --- MUDANÇA: Lógica de autenticação e carregamento de dados centralizada ---
+            // Efeito para verificar a sessão do usuário ao carregar a página
             useEffect(() => {
-                const checkUser = async () => {
-                    const { data: { session } } = await supabase.auth.getSession();
+                const checkUserSession = async () => {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
                     setUser(session?.user ?? null);
                     setIsLoading(false);
                 };
-            
-                checkUser();
-            
-                const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+
+                checkUserSession();
+
+                const { data: authListener } = supabaseClient.auth.onAuthStateChange((event, session) => {
                     setUser(session?.user ?? null);
-                    if (event === 'SIGNED_IN') {
-                        fetchData(session.user.id);
-                    }
-                    if (event === 'SIGNED_OUT') {
-                        setProspects([]); // Limpa os dados ao sair
-                    }
+                    setIsLoading(false);
                 });
-            
+
                 return () => {
                     authListener.subscription.unsubscribe();
                 };
             }, []);
-            
-            // --- NOVO: Função para buscar dados do Supabase ---
-            const fetchData = async (userId) => {
-                setIsLoading(true);
-                // NOTA: Idealmente você filtraria os prospects por `userId`
-                const { data, error } = await supabase
+
+            // Efeito para buscar os dados quando o usuário está logado
+            useEffect(() => {
+                if (user) {
+                    fetchData();
+                } else {
+                    // Limpa os dados se o usuário deslogar
+                    setProspects([]);
+                }
+            }, [user]); // Roda sempre que o 'user' mudar
+
+            // Função para buscar dados da tabela 'prospects'
+            const fetchData = async () => {
+                const { data, error } = await supabaseClient
                     .from('prospects')
-                    .select('*');
+                    .select('*')
+                    .order('created_at', { ascending: false }); // Exemplo: ordenar pelos mais recentes
 
                 if (error) {
                     console.error('Erro ao buscar prospects:', error);
-                    alert('Não foi possível carregar os dados.');
+                    alert('Não foi possível carregar os dados do CRM.');
                 } else {
                     setProspects(data);
                 }
-                setIsLoading(false);
             };
-            
-            // Carrega os dados iniciais se já houver um usuário logado na primeira vez
-            useEffect(() => {
-                if (user) {
-                    fetchData(user.id);
-                }
-            }, [user]); // Roda sempre que o usuário mudar
 
-            // --- MUDANÇA: Função de Login Corrigida ---
-            const handleLogin = async () => {
+            // Função para lidar com o login
+            const handleLogin = async (e) => {
+                e.preventDefault(); // Impede o recarregamento da página
+                setIsLoading(true);
                 try {
-                    const { data, error } = await supabase.auth.signInWithPassword({
+                    const { error } = await supabaseClient.auth.signInWithPassword({
                         email,
                         password,
                     });
                     if (error) throw error;
-                    // O listener onAuthStateChange já vai cuidar de atualizar o estado do usuário
+                    // O onAuthStateChange vai cuidar de atualizar o estado do usuário
                 } catch (error) {
                     alert(error.message);
+                } finally {
+                    setIsLoading(false);
                 }
             };
 
+            // Função para lidar com o logout
             const handleLogout = async () => {
-                await supabase.auth.signOut();
-                // O listener onAuthStateChange já vai cuidar de limpar tudo
+                await supabaseClient.auth.signOut();
             };
 
-            // --- RENDERIZAÇÃO ---
+            // --- RENDERIZAÇÃO CONDICIONAL ---
 
+            // Se ainda estiver carregando a sessão, mostra uma tela de loading
             if (isLoading) {
-                 return <div className="login-container"><h2>Carregando...</h2></div>;
+                return <div className="loading-container">Carregando...</div>;
             }
 
+            // Se não houver usuário logado, mostra o formulário de login
             if (!user) {
                 return (
                     <div className="login-container">
-                        <div className="login-form">
+                        <form className="login-form" onSubmit={handleLogin}>
                             <h2>NG PROSPECT</h2>
-                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" required />
-                            <button onClick={handleLogin}>Entrar</button>
-                             {/* Você pode adicionar um botão de registro aqui se quiser */}
-                        </div>
+                            <input 
+                                type="email" 
+                                value={email} 
+                                onChange={(e) => setEmail(e.target.value)} 
+                                placeholder="E-mail" 
+                                required 
+                            />
+                            <input 
+                                type="password" 
+                                value={password} 
+                                onChange={(e) => setPassword(e.target.value)} 
+                                placeholder="Senha" 
+                                required 
+                            />
+                            <button type="submit">Entrar</button>
+                        </form>
                     </div>
                 );
             }
 
-            // --- O RESTO DA SUA APLICAÇÃO ---
-            // Aqui entra toda a sua UI do dashboard, Kanban, listas, etc.
-            // Eu vou colocar uma estrutura simplificada, você pode colar a sua de volta aqui.
+            // Se o usuário estiver logado, mostra o dashboard
             return (
                 <div className="flex h-screen bg-brand-base-gray">
-                    {/* Sidebar (se tiver) */}
-                    
-                    {/* Conteúdo Principal */}
                     <div className="flex-1 flex flex-col">
-                         <header className="flex justify-between items-center p-4 bg-brand-base-white shadow-md">
+                         <header className="flex justify-between items-center p-4 bg-brand-base-white shadow-md w-full">
                              <div>
-                                 <h1 className="text-xl font-bold text-brand-text-dark">Bem-vindo, {user.email}</h1>
+                                 <h1 className="text-xl font-bold text-brand-text-dark">Bem-vindo(a)!</h1>
+                                 <p className="text-sm text-gray-500">{user.email}</p>
                              </div>
-                             <button onClick={handleLogout} className="bg-brand-coral text-white px-4 py-2 rounded hover:bg-brand-coral-dark">Sair</button>
+                             <button onClick={handleLogout} className="bg-brand-coral text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-coral-dark transition-colors">Sair</button>
                          </header>
                          
                          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto custom-scrollbar">
                             <h2 className="text-2xl font-semibold text-brand-text-dark mb-4">Dashboard de Prospects</h2>
-                            {prospects.length > 0 ? (
-                                <ul>
-                                    {prospects.map(p => <li key={p.id} className="bg-white p-2 mb-2 rounded shadow">{p.name} - {p.contactName}</li>)}
-                                </ul>
-                            ) : (
-                                <p>Nenhum prospect encontrado.</p>
-                            )}
                             
-                            {/* AQUI VOCÊ DEVE COLOCAR SEUS COMPONENTES DE KANBAN,
-                                LISTVIEW, BOTÕES DE IMPORTAR, ETC.
-                                A variável `prospects` já contém os dados do Supabase.
+                            {/* ==================================================================
+                              ==> ÁREA PARA VOCÊ REINSERIR SUA INTERFACE DO KANBAN/LISTA <==
+                              A variável `prospects` já contém os dados do Supabase.
+                              Você pode passar `prospects` como propriedade para seus 
+                              componentes de Kanban, Tabela, etc.
+                              ==================================================================
                             */}
+                            
+                            <div className="bg-white p-4 rounded-lg shadow">
+                                <h3 className="font-bold mb-2">Prospects Carregados:</h3>
+                                {prospects.length > 0 ? (
+                                    <ul>
+                                        {prospects.map(p => (
+                                            <li key={p.id} className="border-b py-2">{p.name} - {p.contactName || 'Sem contato'}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p>Nenhum prospect encontrado. Adicione um novo para começar!</p>
+                                )}
+                            </div>
                          </main>
                     </div>
                 </div>
             );
         }
 
+        // --- 3. RENDERIZAÇÃO INICIAL DO REACT ---
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
 
