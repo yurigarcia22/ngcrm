@@ -3,112 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NG PROSPECT</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'brand-dark-blue': '#202C6D',
-                        'brand-coral': '#F75E67',
-                        'brand-coral-dark': '#E65358',
-                        'brand-base-white': '#FFFFFF',
-                        'brand-base-gray': '#F5F5F5',
-                        'brand-text-dark': '#1a202c',
-                        'brand-text-light': '#E2E8F0',
-                    }
-                }
-            }
-        }
-    </script>
+    <title>NG Prospect CRM</title>
     
-    <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #F5F5F5; color: #1a202c; }
-        .kanban-board { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; }
-        .kanban-column { min-width: 300px; max-width: 320px; flex-shrink: 0; }
-        .kanban-column.drag-over { border-color: #F75E67; border-style: dashed; }
-        .prospect-card.dragging { opacity: 0.5; transform: rotate(3deg); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2); }
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
-        .modal-content { background-color: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%; }
-        .custom-scrollbar::-webkit-scrollbar { height: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        .login-container, .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #202C6D; }
-        .loading-container { color: white; font-size: 1.5rem; font-weight: 600; }
-        .login-form { display: flex; flex-direction: column; gap: 1rem; padding: 2rem; background-color: #FFFFFF; border-radius: 8px; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); width: 90%; max-width: 380px; }
-        .login-form h2 { color: #202C6D; text-align: center; font-size: 1.75rem; font-weight: 700; }
-        .login-form input, .modal-content input, .modal-content select { width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 1rem; }
-        .login-form button, .modal-content button { padding: 0.75rem; border: none; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
-        .login-form button { background-color: #F75E67; color: white; }
-        .login-form button:hover { background-color: #E65358; }
-    </style>
-</head>
-
-<body>
-    <div id="root"></div>
-
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js" defer></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" defer></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; overflow: hidden; }
+        .kanban-board { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; }
+        .kanban-column { min-width: 300px; max-width: 320px; flex-shrink: 0; }
+        .kanban-column.drag-over { border-color: #38bdf8; border-style: dashed; }
+        .prospect-card.dragging { opacity: 0.5; transform: rotate(2deg); }
+        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
+        .modal-content { background-color: white; padding: 2rem; border-radius: 8px; width: 90%; max-width: 500px; }
+        .login-container, .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #1e3a8a; }
+        .loading-container { color: white; font-size: 1.5rem; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, Fragment } = React;
 
-        // --- 1. CONFIGURAÇÃO E CONSTANTES ---
+        // --- 1. CONFIGURAÇÃO DO SUPABASE E CONSTANTES ---
         const supabaseUrl = 'https://ekzjsqheinpvebjfjims.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrempzcWhlaW5wdmViamZqaW1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5OTIzNDMsImV4cCI6MjA2NjU2ODM0M30.HrBFnV6ve6po2GeitFXs55ensNljsXs-1aSVwdKHDDA';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
         const KANBAN_STAGES = ['Novo', 'Contato Inicial', 'Contato com Decisor', 'Proposta Enviada', 'Venda', 'Perdido', 'No Show'];
 
-        // --- 2. COMPONENTES DE UI ---
-
-        function ProspectCard({ prospect, onDragStart }) {
+        // --- 2. COMPONENTES DE UI (REUTILIZÁVEIS) ---
+        function ProspectCard({ prospect, onDragStart, onCardClick }) {
             return (
-                <div 
+                <div
                     draggable="true"
                     onDragStart={(e) => onDragStart(e, prospect.id)}
-                    className="prospect-card bg-white p-4 rounded-lg shadow-sm mb-4 cursor-grab active:cursor-grabbing"
+                    onClick={() => onCardClick(prospect)}
+                    className="prospect-card bg-white rounded-lg shadow p-4 mb-4 border-l-4 border-blue-500 hover:shadow-lg transition-shadow duration-200 cursor-pointer"
                 >
-                    <h4 className="font-bold text-brand-text-dark">{prospect.name}</h4>
-                    <p className="text-gray-600 text-sm">{prospect.contactName}</p>
-                    <p className="text-green-600 font-semibold mt-2">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prospect.value || 0)}
+                    <h3 className="font-bold text-gray-800 truncate">{prospect.name}</h3>
+                    <p className="text-sm text-gray-500 mt-2">{prospect.contactName}</p>
+                    <p className="font-semibold text-green-600 mt-2">
+                        {(prospect.value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </p>
                 </div>
             );
         }
-        
+
         function ProspectModal({ isOpen, onClose, onSave, prospectToEdit }) {
-            const [name, setName] = useState('');
-            const [contactName, setContactName] = useState('');
-            const [value, setValue] = useState(0);
+            const [formData, setFormData] = useState({});
 
             useEffect(() => {
-                if (prospectToEdit) {
-                    setName(prospectToEdit.name || '');
-                    setContactName(prospectToEdit.contactName || '');
-                    setValue(prospectToEdit.value || 0);
-                } else {
-                    setName('');
-                    setContactName('');
-                    setValue(0);
-                }
+                setFormData(prospectToEdit || { name: '', contactName: '', value: 0, status: 'Novo' });
             }, [prospectToEdit, isOpen]);
-
+            
             if (!isOpen) return null;
+
+            const handleChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({ ...prev, [name]: name === 'value' ? parseFloat(value) || 0 : value }));
+            };
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                onSave({ id: prospectToEdit?.id, name, contactName, value: Number(value) });
+                onSave(formData);
                 onClose();
             };
 
@@ -117,172 +81,165 @@
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <h3 className="text-2xl font-bold mb-4">{prospectToEdit ? 'Editar Prospect' : 'Adicionar Prospect'}</h3>
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Nome da Empresa</label>
-                                <input type="text" value={name} onChange={e => setName(e.target.value)} required />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Nome do Contato</label>
-                                <input type="text" value={contactName} onChange={e => setContactName(e.target.value)} />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Valor da Proposta</label>
-                                <input type="number" value={value} onChange={e => setValue(e.target.value)} />
-                            </div>
-                            <div className="flex justify-end gap-4 pt-4">
-                                <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800">Cancelar</button>
-                                <button type="submit" className="bg-brand-coral text-white">Salvar</button>
-                            </div>
+                             <div><label>Nome da Empresa</label><input type="text" name="name" value={formData.name || ''} onChange={handleChange} className="w-full p-2 border rounded" required /></div>
+                             <div><label>Nome do Contato</label><input type="text" name="contactName" value={formData.contactName || ''} onChange={handleChange} className="w-full p-2 border rounded" /></div>
+                             <div><label>Valor da Proposta</label><input type="number" name="value" value={formData.value || ''} onChange={handleChange} className="w-full p-2 border rounded" /></div>
+                             <div><label>Status</label><select name="status" value={formData.status} onChange={handleChange} className="w-full p-2 border rounded">{KANBAN_STAGES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                             <div className="flex justify-end gap-4 pt-4">
+                                <button type="button" onClick={onClose} className="bg-gray-200 px-4 py-2 rounded">Cancelar</button>
+                                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Salvar</button>
+                             </div>
                         </form>
                     </div>
                 </div>
             );
         }
 
-        // --- 3. COMPONENTE PRINCIPAL DA APLICAÇÃO ---
+        // --- 3. COMPONENTE PRINCIPAL (APP) ---
         function App() {
+            // Estados de Autenticação e Carregamento
             const [user, setUser] = useState(null);
             const [isLoading, setIsLoading] = useState(true);
             const [email, setEmail] = useState("");
             const [password, setPassword] = useState("");
+            
+            // Estados de Dados do CRM
             const [prospects, setProspects] = useState([]);
+            const [tasks, setTasks] = useState([]);
+            
+            // Estados de UI
+            const [view, setView] = useState('kanban');
             const [isModalOpen, setIsModalOpen] = useState(false);
+            const [editingProspect, setEditingProspect] = useState(null);
 
+            // --- LÓGICA DE AUTENTICAÇÃO E DADOS ---
             useEffect(() => {
-                const checkUserSession = async () => {
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    setUser(session?.user ?? null);
-                    setIsLoading(false);
-                };
-                checkUserSession();
-                const { data: authListener } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+                supabase.auth.getSession().then(({ data: { session } }) => {
                     setUser(session?.user ?? null);
                     setIsLoading(false);
                 });
-                return () => { authListener.subscription.unsubscribe(); };
+                const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+                    setUser(session?.user ?? null);
+                    setIsLoading(false);
+                });
+                return () => authListener.subscription.unsubscribe();
             }, []);
 
-            useEffect(() => { if (user) fetchData(); }, [user]);
+            useEffect(() => {
+                if (user) {
+                    fetchProspects();
+                    // fetchTasks(); // Descomente quando a tabela 'tasks' for usada
+                }
+            }, [user]);
 
-            const fetchData = async () => {
-                const { data, error } = await supabaseClient.from('prospects').select('*').order('name', { ascending: true });
-                if (error) console.error("Erro ao buscar dados:", error);
+            const fetchProspects = async () => {
+                // ALTERADO AQUI para usar a tabela "CRM DADOS"
+                const { data, error } = await supabase.from('CRM DADOS').select('*');
+                if (error) console.error("Erro ao buscar prospects:", error);
                 else setProspects(data);
             };
 
-            const handleLogin = async (e) => {
-                e.preventDefault();
-                setIsLoading(true);
-                try {
-                    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                    if (error) throw error;
-                } catch (error) {
-                    alert(error.message);
-                } finally {
-                    setIsLoading(false);
-                }
-            };
+            // --- FUNÇÕES DE MANIPULAÇÃO (CRUD) ---
+            const handleLogin = async (e) => { e.preventDefault(); try { const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) throw error; } catch (error) { alert(error.message); } };
+            const handleLogout = async () => { await supabase.auth.signOut(); };
 
-            const handleLogout = async () => { await supabaseClient.auth.signOut(); };
-
-            const handleDragStart = (e, prospectId) => {
-                e.dataTransfer.setData("prospectId", prospectId);
-            };
-            
-            const handleDrop = async (e, newStatus) => {
-                const prospectId = e.dataTransfer.getData("prospectId");
-                e.currentTarget.classList.remove('drag-over');
-
-                // Atualiza o estado local para uma UI mais rápida
-                setProspects(prevProspects => prevProspects.map(p => 
-                    p.id == prospectId ? { ...p, status: newStatus } : p
-                ));
-
-                // Atualiza no banco de dados em segundo plano
-                const { error } = await supabaseClient.from('prospects').update({ status: newStatus }).eq('id', prospectId);
-                if (error) {
-                    console.error("Erro ao atualizar status:", error);
-                    alert("Não foi possível atualizar o prospect. A página será recarregada.");
-                    fetchData(); // Reverte a mudança local se houver erro
-                }
-            };
-            
             const handleSaveProspect = async (prospectData) => {
-                const dataToSave = {
-                    ...prospectData,
-                    userId: user.id // Garante que o prospect seja associado ao usuário logado
-                };
-                delete dataToSave.id; // Remove o ID para inserção
-                
-                const { error } = await supabaseClient.from('prospects').insert([dataToSave]);
+                const dataToSave = { ...prospectData, userId: user.id };
+                let error;
 
+                if (prospectData.id) { // Editando
+                    const prospectId = prospectData.id;
+                    delete prospectData.id;
+                    // ALTERADO AQUI para usar a tabela "CRM DADOS"
+                    ({ error } = await supabase.from('CRM DADOS').update(prospectData).eq('id', prospectId));
+                } else { // Inserindo
+                    // ALTERADO AQUI para usar a tabela "CRM DADOS"
+                    ({ error } = await supabase.from('CRM DADOS').insert([dataToSave]));
+                }
+                
+                if (error) alert("Erro ao salvar prospect: " + error.message);
+                else await fetchProspects();
+            };
+
+            const handleStatusChange = async (prospectId, newStatus) => {
+                setProspects(prev => prev.map(p => p.id == prospectId ? { ...p, status: newStatus } : p));
+                
+                // ALTERADO AQUI para usar a tabela "CRM DADOS"
+                const { error } = await supabase.from('CRM DADOS').update({ status: newStatus }).eq('id', prospectId);
                 if (error) {
-                    console.error("Erro ao salvar prospect:", error);
-                    alert("Falha ao salvar o prospect.");
-                } else {
-                    fetchData(); // Recarrega os dados para mostrar o novo prospect
+                    alert("Erro ao mover o card, atualizando...");
+                    await fetchProspects();
                 }
             };
 
-            if (isLoading) { return <div className="loading-container">Carregando...</div>; }
+            // --- FUNÇÕES DE UI ---
+            const handleOpenModal = (prospect = null) => { setEditingProspect(prospect); setIsModalOpen(true); };
+            const handleCloseModal = () => setIsModalOpen(false);
+            const handleDragStart = (e, prospectId) => e.dataTransfer.setData("prospectId", prospectId);
+            const handleDrop = (e, newStatus) => {
+                e.preventDefault();
+                const prospectId = e.dataTransfer.getData("prospectId");
+                handleStatusChange(parseInt(prospectId), newStatus);
+                e.currentTarget.classList.remove('drag-over');
+            };
 
+            // --- RENDERIZAÇÃO ---
+            if (isLoading) return <div className="loading-container">Carregando...</div>;
             if (!user) {
                 return (
                     <div className="login-container">
-                        <form className="login-form" onSubmit={handleLogin}>
-                            <h2>NG PROSPECT</h2>
-                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-mail" required />
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" required />
-                            <button type="submit">Entrar</button>
+                        <form onSubmit={handleLogin} className="p-8 bg-white rounded-lg shadow-xl w-full max-w-sm space-y-4">
+                             <h2 className="text-2xl font-bold text-center text-gray-800">Login</h2>
+                             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" required className="w-full p-3 border rounded" />
+                             <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Senha" required className="w-full p-3 border rounded" />
+                             <button type="submit" className="w-full p-3 bg-blue-600 text-white rounded font-bold hover:bg-blue-700">Entrar</button>
                         </form>
                     </div>
                 );
             }
 
-            return (
-                <div className="h-screen w-screen flex flex-col">
-                    <header className="flex justify-between items-center p-4 bg-brand-base-white shadow-md flex-shrink-0">
-                        <div>
-                           <h1 className="font-bold text-xl text-brand-dark-blue">NG Prospect</h1>
-                           <p className="text-sm text-gray-600">{user.email}</p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <button onClick={() => setIsModalOpen(true)} className="bg-brand-coral text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-coral-dark transition-colors">Adicionar Prospect</button>
-                            <button onClick={handleLogout} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors">Sair</button>
-                        </div>
-                    </header>
-                    
-                    <main className="flex-1 p-4 sm:p-6 overflow-hidden">
-                        <div className="kanban-board custom-scrollbar h-full">
-                            {KANBAN_STAGES.map(stage => (
-                                <div 
-                                    key={stage}
-                                    className="kanban-column bg-gray-100 rounded-lg p-3 border-2 border-transparent"
-                                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }}
-                                    onDragLeave={(e) => e.currentTarget.classList.remove('drag-over')}
-                                    onDrop={(e) => handleDrop(e, stage)}
-                                >
-                                    <h3 className="font-bold text-lg mb-4 px-1 text-brand-text-dark">{stage}</h3>
-                                    <div className="prospect-list space-y-4">
-                                        {prospects
-                                            .filter(p => p.status === stage)
-                                            .map(p => <ProspectCard key={p.id} prospect={p} onDragStart={handleDragStart} />)
-                                        }
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </main>
+            const NavButton = ({ viewName, children }) => (<button onClick={() => setView(viewName)} className={`px-4 py-2 rounded font-semibold transition-colors ${view === viewName ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-blue-100'}`}>{children}</button>);
 
-                    <ProspectModal 
-                        isOpen={isModalOpen} 
-                        onClose={() => setIsModalOpen(false)}
-                        onSave={handleSaveProspect}
-                    />
-                </div>
+            return (
+                <Fragment>
+                    <ProspectModal isOpen={isModalOpen} onClose={handleCloseModal} onSave={handleSaveProspect} prospectToEdit={editingProspect} />
+                    <div className="h-screen w-screen flex flex-col">
+                        <header className="bg-white shadow-sm p-4 flex justify-between items-center border-b z-10">
+                            <h1 className="text-xl font-bold text-gray-800">NG Prospect</h1>
+                            <nav className="flex items-center space-x-2">
+                                <NavButton viewName="kanban">Kanban</NavButton>
+                                <NavButton viewName="list">Lista</NavButton>
+                                {/* <NavButton viewName="tasks">Tarefas</NavButton> */}
+                                {/* <NavButton viewName="dashboard">Dashboard</NavButton> */}
+                            </nav>
+                            <div className="flex items-center space-x-4">
+                                <button onClick={() => handleOpenModal()} className="px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700">Adicionar Prospect</button>
+                                <button onClick={handleLogout} className="px-4 py-2 bg-gray-200 rounded-md font-semibold">Sair</button>
+                            </div>
+                        </header>
+                        <main className="flex-1 overflow-y-auto">
+                            {view === 'kanban' && (
+                                <div className="kanban-board p-4">
+                                    {KANBAN_STAGES.map(stage => (
+                                        <div key={stage} className="kanban-column bg-gray-100 rounded-lg p-3 border-2 border-transparent"
+                                            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }}
+                                            onDragLeave={(e) => e.currentTarget.classList.remove('drag-over')}
+                                            onDrop={(e) => handleDrop(e, stage)}>
+                                            <h3 className="font-bold mb-4 px-1">{stage} ({prospects.filter(p => p.status === stage).length})</h3>
+                                            {prospects.filter(p => p.status === stage).map(p => 
+                                                <ProspectCard key={p.id} prospect={p} onDragStart={handleDragStart} onCardClick={handleOpenModal} />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {view === 'list' && <div className="p-4 text-center text-gray-500">A visualização em Lista será implementada em breve.</div>}
+                        </main>
+                    </div>
+                </Fragment>
             );
         }
-
+        
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
