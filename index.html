@@ -3,63 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConnectSphere Prospect CRM</title>
+    <title>NG PROSPECT</title>
+
+    <!-- Scripts com DEFER para garantir a ordem de carregamento correta -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js" defer></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" defer></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; overflow: hidden; }
-        .kanban-column.drag-over { background-color: #e0f2fe; border-color: #38bdf8; }
-        .prospect-card.dragging { opacity: 0.5; transform: rotate(3deg); }
+        body { font-family: 'Poppins', sans-serif; overflow: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-track { background: #334155; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+        .kanban-column.drag-over { background-color: rgba(247, 94, 103, 0.1); }
+        .prospect-card.dragging { opacity: 0.5; transform: rotate(3deg) scale(1.05); }
+        .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        .confetti { position: absolute; width: 10px; height: 10px; opacity: 0.7; animation: fall 4s linear forwards; }
+        @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+        .login-container, .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #202C6D; color: white; }
+        .login-form { display: flex; flex-direction: column; gap: 1rem; padding: 2rem; background-color: #FFFFFF; color: #1a202c; border-radius: 8px; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); width: 90%; max-width: 380px; }
+        .login-form h2 { font-size: 1.75rem; font-weight: 700; text-align: center; }
+        .login-form input { padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 1rem; }
+        .login-form button { padding: 0.75rem; border: none; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; background-color: #F75E67; color: white; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useMemo, useEffect, Fragment } = React;
+        const { useState, useMemo, useEffect, Fragment, createContext, useContext } = React;
 
         // --- 1. CONFIGURAÇÃO E CONSTANTES ---
         const supabaseUrl = 'https://ekzjsqheinpvebjfjims.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrempzcWhlaW5wdmViamZqaW1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5OTIzNDMsImV4cCI6MjA2NjU2ODM0M30.HrBFnV6ve6po2GeitFXs55ensNljsXs-1aSVwdKHDDA';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-        const KANBAN_STAGES = ['Novo', 'Contato Inicial', 'Qualificação', 'Proposta', 'Fechado', 'Perdido'];
+        const KANBAN_STAGES = ['Novo', 'Contato Inicial', 'Contato com Decisor', 'Proposta Enviada', 'Venda', 'Perdido', 'No Show'];
+        const CRM_FIELDS = ['name', 'contactName', 'email', 'phone', 'value', 'status'];
+        const CRM_FIELD_LABELS = { name: 'Nome da Empresa', contactName: 'Nome do Contato', email: 'E-mail', phone: 'Telefone', value: 'Valor da Proposta', status: 'Status' };
+        
+        // --- 2. CONTEXTO DE TEMA ---
+        const ThemeContext = createContext();
+        const useTheme = () => useContext(ThemeContext);
+        function ThemeProvider({ children }) {
+            const [theme, setTheme] = useState('dark');
+            useEffect(() => { const storedTheme = localStorage.getItem('crm-theme') || 'dark'; setTheme(storedTheme); }, []);
+            useEffect(() => { document.documentElement.classList.remove('light', 'dark'); document.documentElement.classList.add(theme); localStorage.setItem('crm-theme', theme); }, [theme]);
+            const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+            return (<ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>);
+        }
 
-        // --- 2. COMPONENTES DE UI ---
-        // (Componentes ProspectCard, ProspectModal, KanbanView, etc. - mantidos do seu design original)
-        // As lógicas internas deles agora vão se conectar aos handlers do App principal.
+        // --- 3. ÍCONES ---
+        const Icons = {
+            dashboard: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20V16"/></svg>,
+            kanban: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>,
+            list: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+            tasks: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+            sun: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
+            moon: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>,
+            // ... (restante dos seus ícones)
+        };
+        
+        // --- 4. COMPONENTES DE UI REUTILIZÁVEIS ---
+        // (Aqui entrariam seus componentes como ProspectCard, ProspectModal, etc.)
 
-        // --- 3. APP PRINCIPAL ---
+        // --- 5. COMPONENTE PRINCIPAL QUE GERENCIA TUDO ---
         function App() {
-            // Estados de Autenticação e UI
+            // Estados
             const [user, setUser] = useState(null);
             const [profile, setProfile] = useState(null);
             const [isLoading, setIsLoading] = useState(true);
-            const [view, setView] = useState('dashboard');
-            const [isModalOpen, setIsModalOpen] = useState(false);
-            const [selectedProspect, setSelectedProspect] = useState(null);
-
-            // Estados de Dados (agora vazios, carregados do Supabase)
+            const [email, setEmail] = useState("");
+            const [password, setPassword] = useState("");
             const [prospects, setProspects] = useState([]);
             const [tasks, setTasks] = useState([]);
-            const [users, setUsers] = useState([]); // Usaremos a tabela 'profiles' para isso
+            const [users, setUsers] = useState([]);
+            const [view, setView] = useState('kanban');
+            const [showConfetti, setShowConfetti] = useState(false);
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+            const [selectedProspect, setSelectedProspect] = useState(null);
+            const [selectedIds, setSelectedIds] = useState([]);
 
             // --- LÓGICA DE AUTENTICAÇÃO E CARREGAMENTO DE DADOS ---
             useEffect(() => {
-                const session = supabase.auth.getSession().then(({ data: { session } }) => {
+                const checkSession = async () => {
+                    const { data: { session } } = await supabase.auth.getSession();
                     setUser(session?.user ?? null);
                     if (!session?.user) setIsLoading(false);
-                });
+                };
+                checkSession();
+
                 const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
                     setUser(session?.user ?? null);
                     if (!session?.user) setIsLoading(false);
                 });
+
                 return () => authListener.subscription.unsubscribe();
             }, []);
 
@@ -74,129 +122,120 @@
                 await Promise.all([
                     fetchProspects(),
                     fetchTasks(),
-                    fetchProfiles() // Carrega os perfis dos usuários
+                    fetchProfiles()
                 ]);
                 setIsLoading(false);
             };
 
             const fetchProspects = async () => {
-                const { data, error } = await supabase.from('prospects').select('*');
-                if (error) console.error("Erro ao buscar prospects:", error);
+                const { data, error } = await supabase.from('CRM DADOS').select('*');
+                if (error) console.error("Erro ao buscar prospects:", error.message);
                 else setProspects(data || []);
             };
+
             const fetchTasks = async () => {
                 const { data, error } = await supabase.from('tasks').select('*');
-                if (error) console.error("Erro ao buscar tarefas:", error);
+                if (error) console.error("Erro ao buscar tarefas:", error.message);
                 else setTasks(data || []);
             };
+            
             const fetchProfiles = async () => {
                 const { data, error } = await supabase.from('profiles').select('*');
-                if (error) console.error("Erro ao buscar perfis:", error);
+                if (error) console.error("Erro ao buscar perfis:", error.message);
                 else {
                     setUsers(data || []);
-                    // Define o perfil do usuário logado
                     const currentUserProfile = data.find(p => p.id === user.id);
                     setProfile(currentUserProfile);
                 }
             };
-            
-            // --- FUNÇÕES DE MANIPULAÇÃO DE DADOS (HANDLERS) ---
-            const handleStatusChange = async (prospectId, newStatus) => {
-                setProspects(prev => prev.map(p => p.id === prospectId ? { ...p, status: newStatus } : p));
-                const { error } = await supabase.from('prospects').update({ status: newStatus }).eq('id', prospectId);
-                if (error) {
-                    alert("Erro ao atualizar o prospect.");
-                    fetchProspects(); // Reverte em caso de erro
-                }
-            };
 
-            const handleSaveProspect = async (prospectData) => {
-                const dataToSave = { ...prospectData, userId: user.id };
-                let error;
-                if (dataToSave.id) { // Editando
-                    const { id, ...updateData } = dataToSave;
-                    ({ error } = await supabase.from('prospects').update(updateData).eq('id', id));
-                } else { // Criando
-                    delete dataToSave.id;
-                    ({ error } = await supabase.from('prospects').insert(dataToSave));
-                }
-                if (error) {
-                    alert("Erro ao salvar prospect: " + error.message);
-                } else {
-                    handleCloseModal();
-                    await fetchProspects();
-                }
-            };
-
-            const handleAddTask = async (prospect, description, dueDate) => {
-                const newTask = { prospectId: prospect.id, userId: user.id, description, dueDate, type: 'Follow-up' };
-                const { error } = await supabase.from('tasks').insert(newTask);
-                if (error) {
-                    alert("Erro ao agendar tarefa: " + error.message);
-                } else {
-                    alert(`Tarefa '${description}' agendada para ${prospect.name}.`);
-                    await fetchTasks();
-                }
-            };
-            
-            // E assim por diante para todas as outras funções... (handleTaskToggle, etc.)
-
+            // --- FUNÇÕES DE MANIPULAÇÃO (HANDLERS) ---
+            const handleLogin = async (e) => { e.preventDefault(); try { const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) throw error; } catch (error) { alert(error.message); } };
+            const handleLogout = async () => { await supabase.auth.signOut(); setProspects([]); setTasks([]); setUsers([]); setProfile(null); };
             const handleCardClick = (prospect) => { setSelectedProspect(prospect); setIsModalOpen(true); };
             const handleCloseModal = () => { setIsModalOpen(false); setSelectedProspect(null); };
+            const triggerCelebration = () => { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 4000); };
+            
+            const handleSaveProspect = async (savedProspect) => {
+                const isCreating = !savedProspect.id;
+                const originalProspect = isCreating ? null : prospects.find(p => p.id === savedProspect.id);
+                
+                if (!isCreating && savedProspect.status === 'Venda' && originalProspect?.status !== 'Proposta Enviada') {
+                    alert('Ação bloqueada: Um prospect só pode ir para "Venda" após ter uma "Proposta Enviada".');
+                    return false;
+                }
 
-            // --- RENDERIZAÇÃO ---
-            if (isLoading) return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#1e3a8a', color: 'white', fontSize: '2rem'}}>Carregando...</div>;
+                const dataToSave = { ...savedProspect, userId: user.id };
+                let error;
 
-            if (!user) {
-                // Seu formulário de login aqui
-                // ...
-                return <div>Tela de Login</div>;
+                if (isCreating) {
+                    delete dataToSave.id;
+                    ({ error } = await supabase.from('CRM DADOS').insert(dataToSave).select());
+                } else {
+                    const { id, ...updateData } = dataToSave;
+                    ({ error } = await supabase.from('CRM DADOS').update(updateData).eq('id', id));
+                }
+
+                if (error) {
+                    alert("Erro ao salvar prospect: " + error.message);
+                    return false;
+                }
+                
+                if (savedProspect.status === 'Venda' && originalProspect?.status !== 'Venda') {
+                    triggerCelebration();
+                }
+                
+                await fetchProspects();
+                return true;
+            };
+
+            // ... (incluir todas as outras funções de handle do seu código original)
+            
+            // --- RENDERIZAÇÃO CONDICIONAL ---
+            if (isLoading) {
+                return <div className="loading-container text-2xl font-semibold">Carregando...</div>;
             }
 
-            const renderView = () => {
-                const props = { prospects, users, tasks, onStatusChange: handleStatusChange, onCardClick: handleCardClick };
-                switch (view) {
-                    case 'kanban': return <KanbanView {...props} />;
-                    case 'list': return <ListView {...props} />;
-                    case 'tasks': return <TasksView {...props} />;
-                    case 'dashboard': default: return <DashboardView {...props} />;
-                }
-            };
-            
-            // Recriando os componentes de UI aqui para manter a estrutura do seu arquivo original
-            // Placeholder para os componentes. Você pode colar os seus aqui.
-            const KanbanView = (props) => <div>Kanban View: {props.prospects.length} prospects</div>;
-            const ListView = (props) => <div>List View</div>;
-            const TasksView = (props) => <div>Tasks View</div>;
-            const DashboardView = (props) => <div>Dashboard View</div>;
-            // ...e assim por diante para todos os outros componentes...
+            if (!user) {
+                return (
+                    <div className="login-container">
+                        <form onSubmit={handleLogin} className="login-form">
+                            <h2 className="text-brand-dark-blue">NG PROSPECT</h2>
+                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" required />
+                            <button type="submit">Entrar</button>
+                        </form>
+                    </div>
+                );
+            }
 
+            // --- RENDERIZAÇÃO DA APLICAÇÃO ---
+            // A partir daqui, você pode colar toda a estrutura visual do seu componente "CrmApp" original
             return (
                 <Fragment>
-                    {/* <ProspectModal ... /> */}
-                    <div className="h-screen w-screen flex flex-col bg-slate-50">
-                        <header className="bg-white shadow-sm p-4 flex justify-between items-center border-b z-10">
-                            <h1 className="text-xl font-bold text-gray-800">ConnectSphere Prospect</h1>
-                            <nav className="flex items-center space-x-2">
-                                <button onClick={() => setView('dashboard')}>Dashboard</button>
-                                <button onClick={() => setView('kanban')}>Kanban</button>
-                                <button onClick={() => setView('list')}>Lista</button>
-                                <button onClick={() => setView('tasks')}>Tarefas</button>
-                            </nav>
-                            <div className="flex items-center space-x-4">
-                               <button onClick={() => setIsModalOpen(true)}>Adicionar Prospect</button>
-                               <span>Olá, {profile?.name || user.email}</span>
-                               <button onClick={() => supabase.auth.signOut()}>Sair</button>
-                            </div>
+                    {/* Cole o conteúdo do seu `return` do CrmApp aqui */}
+                    <div className="h-screen w-screen flex flex-col bg-brand-base-gray dark:bg-brand-dark-blue">
+                        <header className="bg-brand-dark-blue p-4 flex justify-between items-center border-b border-white/10 flex-shrink-0">
+                            {/* ... Seu cabeçalho completo ... */}
                         </header>
-                        <main className="flex-1 overflow-y-auto">{renderView()}</main>
+                        <main className="flex-1 overflow-y-auto">
+                           {/* ... Seu `renderView()` aqui ... */}
+                           <h1 className="p-8 text-xl">Olá {profile?.name || user.email}, seu CRM está conectado!</h1>
+                           <p className="px-8">Agora, substitua este conteúdo pela sua UI completa.</p>
+                        </main>
                     </div>
                 </Fragment>
             );
         }
-
+        
+        // --- PONTO DE ENTRADA DA APLICAÇÃO ---
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(
+            <ThemeProvider>
+                <App />
+            </ThemeProvider>
+        );
+
     </script>
 </body>
 </html>
