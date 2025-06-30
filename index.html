@@ -117,7 +117,7 @@
             useEffect(() => { setEditedData(prospect); setSelectedActions([]); setNewTaskDesc(''); setNewTaskDate(''); setIsDeleting(false); setNewObservation(''); }, [prospect]);
             
             const handleChange = (e) => { const { name, value } = e.target; setEditedData(prev => ({...prev, [name]: name === 'value' ? parseFloat(value) || 0 : value })); };
-            const handleSave = () => { if (onSave(editedData)) { onClose(); } };
+            const handleSave = () => { if (onSave(editedData, false)) { alert("Alterações salvas com sucesso!"); } };
             const handleActionToggle = (actionType) => { setSelectedActions(prev => prev.includes(actionType) ? prev.filter(a => a !== actionType) : [...prev, actionType]); };
             const handleRegisterClick = () => { if(selectedActions.length === 0) { alert('Selecione pelo menos uma ação para registrar.'); return; } onRegisterCadence(prospect, selectedActions); setSelectedActions([]); };
             const handleScheduleTask = () => { if(!newTaskDesc || !newTaskDate) { alert("Por favor, preencha a descrição e a data da tarefa."); return; } onAddTask(prospect, newTaskDesc, newTaskDate); setNewTaskDesc(''); setNewTaskDate(''); };
@@ -517,7 +517,7 @@
                 if (error) { alert("Erro ao atualizar o status."); await fetchProspects(); }
             };
 
-            const handleSaveProspect = async (savedProspect) => {
+            const handleSaveProspect = async (savedProspect, shouldClose = true) => {
                 const isCreating = !savedProspect.id;
                 const originalProspect = isCreating ? null : prospects.find(p => p.id === savedProspect.id);
                 if (!isCreating && savedProspect.status === 'Venda' && originalProspect?.status !== 'Proposta Enviada') {
@@ -529,7 +529,7 @@
 
                 if (isCreating) {
                     delete dataToSave.id;
-                    ({ error } = await supabase.from('CRM DADOS').insert(dataToSave));
+                    ({ error } = await supabase.from('CRM DADOS').insert(dataToSave).select());
                 } else {
                     const changeLog = [];
                     for (const key in savedProspect) { if (originalProspect && originalProspect[key] !== savedProspect[key]) { changeLog.push({ field: key, oldValue: originalProspect[key], newValue: savedProspect[key], timestamp: new Date().toISOString() }); } }
@@ -542,6 +542,9 @@
 
                 if (savedProspect.status === 'Venda' && originalProspect?.status !== 'Venda') triggerCelebration();
                 await fetchProspects();
+                if (shouldClose) {
+                    handleCloseModals();
+                }
                 return true;
             };
 
@@ -697,7 +700,7 @@
                 </Fragment>
             );
         }
-    
+        
         // --- Ponto de Entrada do React ---
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
