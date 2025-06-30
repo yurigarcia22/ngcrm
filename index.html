@@ -44,13 +44,22 @@
         .confetti { position: absolute; width: 10px; height: 10px; opacity: 0.7; animation: fall 4s linear forwards; }
         @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
         .login-container, .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #202C6D; color: white; }
+        
+        /* Estilos para o Toast */
+        .toast-container { position: fixed; top: 1.25rem; right: 1.25rem; z-index: 10000; display: flex; flex-direction: column; gap: 0.75rem; }
+        .toast { display: flex; align-items: center; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); color: white; animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-in 2.7s forwards; }
+        .toast-success { background-color: #10B981; }
+        .toast-error { background-color: #EF4444; }
+        .toast-info { background-color: #3B82F6; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateX(100%); } }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useMemo, useEffect, Fragment, useRef } = React;
+        const { useState, useMemo, useEffect, Fragment, useRef, createContext, useContext } = React;
 
         // --- 1. CONFIGURAÇÃO E CONSTANTES ---
         const supabaseUrl = 'https://ekzjsqheinpvebjfjims.supabase.co';
@@ -82,7 +91,37 @@
             trash: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
         };
 
-        // --- 3. COMPONENTES DE UI ---
+        // --- 3. SISTEMA DE NOTIFICAÇÃO (Toast) ---
+        const ToastContext = createContext();
+
+        function ToastProvider({ children }) {
+            const [toasts, setToasts] = useState([]);
+
+            const addToast = (message, type = 'info') => {
+                const id = Date.now();
+                setToasts(prev => [...prev, { id, message, type }]);
+                setTimeout(() => {
+                    setToasts(prev => prev.filter(t => t.id !== id));
+                }, 3000);
+            };
+
+            return (
+                <ToastContext.Provider value={{ addToast }}>
+                    {children}
+                    <div className="toast-container">
+                        {toasts.map(toast => (
+                            <div key={toast.id} className={`toast toast-${toast.type}`}>
+                                {toast.message}
+                            </div>
+                        ))}
+                    </div>
+                </ToastContext.Provider>
+            );
+        }
+
+        const useToast = () => useContext(ToastContext);
+
+        // --- 4. COMPONENTES DE UI ---
 
         function Confetti() {
             const confettiCount = 150;
@@ -118,8 +157,9 @@
             );
         }
 
-        function EditProspectModal({ isOpen, onClose, prospect, users, tasks, onSave, onRegisterCadence, onAddTask, onDelete, onAddObservation, allTags, onCreateTag }) {
+        function EditProspectModal({ isOpen, onClose, prospect, users, tasks, onSave, onRegisterCadence, onAddTask, onDelete, onAddObservation, allTags, onCreateTag, profile }) {
             if (!isOpen || !prospect) return null;
+            const { addToast } = useToast();
             const [editedData, setEditedData] = useState(prospect);
             const [selectedActions, setSelectedActions] = useState([]);
             const [newTaskDesc, setNewTaskDesc] = useState('');
@@ -133,10 +173,10 @@
             useEffect(() => { setEditedData(prospect); setSelectedActions([]); setNewTaskDesc(''); setNewTaskDate(''); setIsDeleting(false); setNewObservation(''); }, [prospect]);
             
             const handleChange = (e) => { const { name, value } = e.target; setEditedData(prev => ({...prev, [name]: name === 'value' ? parseFloat(value) || 0 : value })); };
-            const handleSave = () => { if (onSave(editedData, false)) { alert("Alterações salvas com sucesso!"); } };
+            const handleSave = () => { onSave(editedData, false); };
             const handleActionToggle = (actionType) => { setSelectedActions(prev => prev.includes(actionType) ? prev.filter(a => a !== actionType) : [...prev, actionType]); };
-            const handleRegisterClick = () => { if(selectedActions.length === 0) { alert('Selecione pelo menos uma ação para registrar.'); return; } onRegisterCadence(prospect, selectedActions); setSelectedActions([]); };
-            const handleScheduleTask = () => { if(!newTaskDesc || !newTaskDate) { alert("Por favor, preencha a descrição e a data da tarefa."); return; } onAddTask(prospect, newTaskDesc, newTaskDate); setNewTaskDesc(''); setNewTaskDate(''); };
+            const handleRegisterClick = () => { if(selectedActions.length === 0) { addToast('Selecione pelo menos uma ação para registrar.', 'error'); return; } onRegisterCadence(prospect, selectedActions); setSelectedActions([]); };
+            const handleScheduleTask = () => { if(!newTaskDesc || !newTaskDate) { addToast("Por favor, preencha a descrição e a data da tarefa.", 'error'); return; } onAddTask(prospect, newTaskDesc, newTaskDate); setNewTaskDesc(''); setNewTaskDate(''); };
             const handleAddObservationClick = () => { if (!newObservation.trim()) return; onAddObservation(prospect, newObservation); setNewObservation(''); };
 
             const handleTagToggle = (tagName) => {
@@ -146,7 +186,7 @@
             };
 
             const handleCreateTag = () => {
-                if (!newTagName.trim()) { alert('Por favor, insira um nome para a tag.'); return; }
+                if (!newTagName.trim()) { addToast('Por favor, insira um nome para a tag.', 'error'); return; }
                 onCreateTag(newTagName, newTagColor);
                 setNewTagName('');
             };
@@ -179,7 +219,6 @@
                                     <div><label className="block text-sm font-medium text-gray-700">Status</label><select name="status" value={editedData.status} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral">{KANBAN_STAGES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
                                     <div><label className="block text-sm font-medium text-gray-700">Responsável</label><select name="user_id" value={editedData.user_id} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral">{(users || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
                                     
-                                    {/* MOVED TAGS SECTION HERE */}
                                     <div className="border rounded-md mt-4">
                                         <div className="p-2 cursor-pointer flex justify-between items-center bg-gray-100" onClick={() => toggleSection('tags')}>
                                             <h4 className="font-semibold text-gray-700">Tags</h4>
@@ -196,14 +235,16 @@
                                                         </span>
                                                     ))}
                                                 </div>
-                                                <div className="border-t pt-4 mt-4 space-y-2">
-                                                     <h5 className="text-sm font-semibold text-gray-600">Criar Nova Tag</h5>
-                                                     <input type="text" placeholder="Nome da tag" value={newTagName} onChange={e => setNewTagName(e.target.value)} className="block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" />
-                                                     <div className="flex items-center gap-2">
-                                                        <input type="color" value={newTagColor} onChange={e => setNewTagColor(e.target.value)} className="p-1 h-10 w-14 block bg-white border border-gray-300 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none" />
-                                                        <button onClick={handleCreateTag} className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 lowercase">Criar Tag</button>
-                                                     </div>
-                                                </div>
+                                                {profile?.role === 'admin' && (
+                                                    <div className="border-t pt-4 mt-4 space-y-2">
+                                                         <h5 className="text-sm font-semibold text-gray-600">Criar Nova Tag</h5>
+                                                         <input type="text" placeholder="Nome da tag" value={newTagName} onChange={e => setNewTagName(e.target.value)} className="block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" />
+                                                         <div className="flex items-center gap-2">
+                                                            <input type="color" value={newTagColor} onChange={e => setNewTagColor(e.target.value)} className="p-1 h-10 w-14 block bg-white border border-gray-300 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none" />
+                                                            <button onClick={handleCreateTag} className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 lowercase">Criar Tag</button>
+                                                         </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -315,7 +356,14 @@
         function KanbanView({ prospects, users, tasks, onStatusChange, onCardClick, handleDragStart, profile, selectedUserId, setSelectedUserId, allTags }) {
             const handleDragOver = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over') };
             const handleDragLeave = (e) => e.currentTarget.classList.remove('drag-over');
-            const handleDrop = (e, newStatus) => { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); const prospectId = e.dataTransfer.getData("prospectId"); onStatusChange(parseInt(prospectId), newStatus); };
+            const handleDrop = (e, newStatus) => { 
+                e.preventDefault(); 
+                e.currentTarget.classList.remove('drag-over'); 
+                const prospectId = parseInt(e.dataTransfer.getData("prospectId"), 10);
+                if (!isNaN(prospectId)) {
+                    onStatusChange(prospectId, newStatus); 
+                }
+            };
             const prospectsByStage = useMemo(() => { const grouped = {}; KANBAN_STAGES.forEach(stage => grouped[stage] = []); (prospects || []).forEach(p => { if (grouped[p.status]) grouped[p.status].push(p) }); return grouped; }, [prospects]);
             return (
                 <div className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col">
@@ -523,6 +571,7 @@
             const [selectedProspect, setSelectedProspect] = useState(null);
             const [selectedIds, setSelectedIds] = useState([]);
             const [selectedUserId, setSelectedUserId] = useState('all');
+            const { addToast } = useToast();
 
             const fetchInitialData = async (currentUserId) => { setIsLoading(true); await Promise.all([fetchProspects(), fetchTasks(), fetchProfiles(currentUserId), fetchTags()]); setIsLoading(false); };
             const fetchProspects = async () => { const { data, error } = await supabase.from('CRM DADOS').select('*'); if (error) console.error("Erro ao buscar prospects:", error.message); else setProspects(data || []); };
@@ -554,25 +603,26 @@
             useEffect(() => {
                 if (!user) return;
                 
+                const handleRealtimeUpdate = (payload, setter, idField = 'id') => {
+                    const { eventType, new: newRecord, old: oldRecord } = payload;
+                    setter(currentData => {
+                        if (eventType === 'INSERT') return [...currentData, newRecord];
+                        if (eventType === 'UPDATE') return currentData.map(item => item[idField] === newRecord[idField] ? newRecord : item);
+                        if (eventType === 'DELETE') return currentData.filter(item => item[idField] !== oldRecord[idField]);
+                        return currentData;
+                    });
+                };
+
                 const prospectChannel = supabase.channel('public:CRM DADOS')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'CRM DADOS' }, payload => {
-                        console.log('Change received!', payload);
-                        fetchProspects();
-                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'CRM DADOS' }, (payload) => handleRealtimeUpdate(payload, setProspects))
                     .subscribe();
 
                 const taskChannel = supabase.channel('public:tasks')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, payload => {
-                        console.log('Task change received!', payload);
-                        fetchTasks();
-                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => handleRealtimeUpdate(payload, setTasks))
                     .subscribe();
                 
                 const tagChannel = supabase.channel('public:tags')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'tags' }, payload => {
-                        console.log('Tag change received!', payload);
-                        fetchTags();
-                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'tags' }, (payload) => handleRealtimeUpdate(payload, setAllTags))
                     .subscribe();
 
                 return () => {
@@ -582,8 +632,8 @@
                 };
             }, [user]);
             
-            const handleLogin = async (e) => { e.preventDefault(); try { const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) throw error; } catch (error) { alert(error.message); } };
-            const handleLogout = async () => { await supabase.auth.signOut(); };
+            const handleLogin = async (e) => { e.preventDefault(); try { const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) { throw error; } addToast('Login bem-sucedido!', 'success'); } catch (error) { addToast(error.message, 'error'); } };
+            const handleLogout = async () => { await supabase.auth.signOut(); addToast('Você saiu da sua conta.'); };
             const handleCardClick = (prospect) => { setSelectedProspect(prospect); setIsEditModalOpen(true); };
             const handleNewProspectClick = () => { setIsAddModalOpen(true); };
             const handleCloseModals = () => { setIsAddModalOpen(false); setIsEditModalOpen(false); setSelectedProspect(null); };
@@ -592,26 +642,29 @@
 
             const handleStatusChange = async (prospectId, newStatus) => { 
                 const prospect = prospects.find(p => p.id === prospectId);
-                const originalStatus = prospect?.status;
+                if (!prospect) return;
                 
-                if (newStatus === 'Venda' && prospect.status !== 'Proposta Enviada') {
-                    alert('Ação bloqueada: Um prospect só pode ir para "Venda" após ter uma "Proposta Enviada".'); return;
+                const originalStatus = prospect.status;
+                
+                if (newStatus === 'Venda' && originalStatus !== 'Proposta Enviada') {
+                    addToast('Ação bloqueada: Mova para "Proposta Enviada" primeiro.', 'error'); return;
                 }
                 
-                if (prospect && prospect.status !== 'Venda' && newStatus === 'Venda') triggerCelebration();
+                if (originalStatus !== 'Venda' && newStatus === 'Venda') triggerCelebration();
                 
-                const changeLog = { field: 'status', oldValue: originalStatus, newValue: newStatus, timestamp: new Date().toISOString() };
+                const changeLog = { field: 'status', oldValue: originalStatus, newValue: newStatus, timestamp: new Date().toISOString(), user_id: user.id };
                 const updatedHistory = [...(prospect.edit_history || []), changeLog];
 
                 const { error } = await supabase.from('CRM DADOS').update({ status: newStatus, edit_history: updatedHistory }).eq('id', prospectId);
-                if (error) { alert("Erro ao atualizar o status."); }
+                if (error) { addToast("Erro ao atualizar o status.", 'error'); }
+                else { addToast(`Prospect movido para ${newStatus}.`, 'success'); }
             };
 
             const handleSaveProspect = async (savedProspect, shouldClose = true) => {
                 const isCreating = !savedProspect.id;
                 const originalProspect = isCreating ? null : prospects.find(p => p.id === savedProspect.id);
                 if (!isCreating && savedProspect.status === 'Venda' && originalProspect?.status !== 'Proposta Enviada') {
-                    alert('Não é possível alterar o status para "Venda" sem antes estar em "Proposta Enviada".');
+                    addToast('Não é possível alterar o status para "Venda" sem antes estar em "Proposta Enviada".', 'error');
                     return false;
                 }
             
@@ -628,9 +681,7 @@
                     ({ error } = await supabase.from('CRM DADOS').insert({ ...dataToSave, user_id: user.id }).select());
                 } else {
                     const changeLog = [];
-                    // Loop to build the change history log
                     for (const key in savedProspect) {
-                        // Use JSON.stringify for robust comparison of arrays/objects
                         if (originalProspect && JSON.stringify(originalProspect[key]) !== JSON.stringify(savedProspect[key])) {
                             changeLog.push({
                                 field: key,
@@ -642,13 +693,18 @@
                         }
                     }
             
-                    const updatedData = { ...savedProspect, edit_history: [...(originalProspect.edit_history || []), ...changeLog] };
-                    delete updatedData.id;
-                    ({ error } = await supabase.from('CRM DADOS').update(updatedData).eq('id', savedProspect.id));
+                    if (changeLog.length > 0) {
+                        const updatedData = { ...savedProspect, edit_history: [...(originalProspect.edit_history || []), ...changeLog] };
+                        delete updatedData.id;
+                        ({ error } = await supabase.from('CRM DADOS').update(updatedData).eq('id', savedProspect.id));
+                    } else {
+                        if (!shouldClose) addToast("Nenhuma alteração para salvar.", 'info');
+                        return true;
+                    }
                 }
             
                 if (error) {
-                    alert("Erro ao salvar prospect: " + error.message);
+                    addToast("Erro ao salvar prospect: " + error.message, 'error');
                     return false;
                 }
             
@@ -658,12 +714,13 @@
             
                 if (shouldClose) {
                     handleCloseModals();
+                    addToast(isCreating ? 'Prospect criado com sucesso!' : 'Alterações salvas com sucesso!', 'success');
                 } else {
                     const { data: updatedProspect } = await supabase.from('CRM DADOS').select('*').eq('id', savedProspect.id).single();
                     if (updatedProspect) {
                         setSelectedProspect(updatedProspect);
                     }
-                    alert("Alterações salvas com sucesso!");
+                    addToast("Alterações salvas com sucesso!", 'success');
                 }
                 return true;
             };
@@ -671,27 +728,27 @@
             const handleRegisterCadence = async (prospect, actions) => { 
                 if (actions.includes('Venda')) {
                     if (prospect.status !== 'Proposta Enviada') {
-                        alert('Ação bloqueada: Um prospect só pode ir para "Venda" após ter uma "Proposta Enviada".'); return;
+                        addToast('Ação bloqueada: Mova para "Proposta Enviada" primeiro.', 'error'); return;
                     }
                     await handleStatusChange(prospect.id, 'Venda');
                 }
                 const newTask = { prospect_id: prospect.id, user_id: user.id, description: `Cadência: ${actions.join(', ')}`, due_date: new Date().toISOString().split('T')[0], completed: true, type: 'Cadência' }; 
                 const { error } = await supabase.from('tasks').insert(newTask);
-                if (error) { alert("Erro ao registrar cadência: " + error.message); }
-                else { alert(`${actions.length} ações registadas como 1 cadência para ${prospect.name}!`); }
+                if (error) { addToast("Erro ao registrar cadência: " + error.message, 'error'); }
+                else { addToast(`Cadência registrada para ${prospect.name}!`, 'success'); }
             };
 
             const handleTaskToggle = async (taskId) => {
                 const task = tasks.find(t => t.id === taskId);
                 const { error } = await supabase.from('tasks').update({ completed: !task.completed }).eq('id', taskId);
-                if (error) { alert("Erro ao atualizar tarefa."); }
+                if (error) { addToast("Erro ao atualizar tarefa.", 'error'); }
             };
             
             const handleAddTask = async (prospect, description, dueDate) => { 
                 const newTask = { prospect_id: prospect.id, user_id: user.id, description, due_date: dueDate, completed: false, type: 'Follow-up' }; 
                 const { error } = await supabase.from('tasks').insert(newTask);
-                if(error) { alert(`Erro ao agendar tarefa: ${error.message}`); }
-                else { alert(`Tarefa '${description}' agendada para ${prospect.name}.`); }
+                if(error) { addToast(`Erro ao agendar tarefa: ${error.message}`, 'error'); }
+                else { addToast(`Tarefa agendada para ${prospect.name}.`, 'success'); }
             };
 
             const handleDragStart = (e, prospectId) => e.dataTransfer.setData("prospectId", prospectId);
@@ -710,21 +767,21 @@
                 if (newProspectsData.length > 0) {
                     const { error } = await supabase.from('CRM DADOS').insert(newProspectsData);
                     if (error) {
-                        alert("Erro ao importar contatos: " + error.message);
+                        addToast("Erro ao importar contatos: " + error.message, 'error');
                     } else {
-                        alert(`${newProspectsData.length} contatos importados com sucesso!`);
+                        addToast(`${newProspectsData.length} contatos importados com sucesso!`, 'success');
                     }
                 } else {
-                    alert("Nenhum contato novo para importar (podem ser duplicados ou não ter e-mail).");
+                    addToast("Nenhum contato novo para importar (podem ser duplicados).", 'info');
                 }
             };
             
             const handleDeleteProspect = async (prospectId) => {
                 const { error } = await supabase.from('CRM DADOS').delete().eq('id', prospectId);
                 if (error) {
-                    alert("Erro ao excluir prospect: " + error.message);
+                    addToast("Erro ao excluir prospect: " + error.message, 'error');
                 } else {
-                    alert("Prospect excluído com sucesso.");
+                    addToast("Prospect excluído com sucesso.", 'success');
                     handleCloseModals();
                 }
             };
@@ -743,9 +800,10 @@
                 const { error } = await supabase.from('CRM DADOS').update({ edit_history: updatedHistory }).eq('id', prospect.id);
 
                 if (error) {
-                    alert("Erro ao salvar observação: " + error.message);
+                    addToast("Erro ao salvar observação: " + error.message, 'error');
                 } else {
                     setSelectedProspect(prev => ({...prev, edit_history: updatedHistory}));
+                    addToast("Observação adicionada.", 'success');
                 }
             };
 
@@ -753,29 +811,25 @@
                 if (!tagName.trim()) return;
                 const { data, error } = await supabase.from('tags').insert([{ name: tagName, color: tagColor }]).select();
                 if (error) {
-                    alert("Erro ao criar tag: " + error.message);
+                    addToast("Erro ao criar tag: " + error.message, 'error');
                 } else {
-                    alert(`Tag "${tagName}" criada com sucesso!`);
+                    addToast(`Tag "${tagName}" criada com sucesso!`, 'success');
                 }
             };
             
             const filteredData = useMemo(() => {
-                // Adiciona uma verificação para garantir que o perfil não é nulo antes de filtrar
                 if (!profile) return []; 
 
                 if (profile.role === 'admin' && selectedUserId !== 'all') {
                     return prospects.filter(p => p.user_id === selectedUserId);
                 }
                 if (profile.role !== 'admin') {
-                    // Usuários não-admin veem apenas seus próprios prospects
                     return prospects.filter(p => p.user_id === profile.id);
                 }
-                // Admin com 'todos os usuários' selecionado vê todos os prospects
                 return prospects;
             }, [prospects, selectedUserId, profile]);
             
             const filteredTasksForViews = useMemo(() => {
-                // Adiciona uma verificação para garantir que o perfil não é nulo antes de filtrar
                 if (!profile) return [];
 
                 if (profile.role === 'admin' && selectedUserId !== 'all') {
@@ -785,13 +839,11 @@
                     });
                 }
                 if (profile.role !== 'admin') {
-                    // Usuários não-admin veem apenas tarefas relacionadas aos seus prospects
                     return tasks.filter(t => {
                         const prospect = prospects.find(p => p.id === t.prospect_id);
                         return prospect?.user_id === profile.id;
                     });
                 }
-                // Admin com 'todos os usuários' selecionado vê todas as tarefas
                 return tasks;
             }, [tasks, prospects, selectedUserId, profile]);
             
@@ -826,7 +878,7 @@
                 <Fragment>
                     {showConfetti && <Confetti />}
                     <AddProspectModal isOpen={isAddModalOpen} onClose={handleCloseModals} onSave={handleSaveProspect} users={users} currentUserId={user.id} />
-                    <EditProspectModal isOpen={isEditModalOpen} onClose={handleCloseModals} prospect={selectedProspect} users={users} tasks={tasks} onSave={handleSaveProspect} onRegisterCadence={handleRegisterCadence} onAddTask={handleAddTask} onDelete={handleDeleteProspect} onAddObservation={handleAddObservation} allTags={allTags} onCreateTag={handleCreateTag} />
+                    <EditProspectModal isOpen={isEditModalOpen} onClose={handleCloseModals} prospect={selectedProspect} users={users} tasks={tasks} onSave={handleSaveProspect} onRegisterCadence={handleRegisterCadence} onAddTask={handleAddTask} onDelete={handleDeleteProspect} onAddObservation={handleAddObservation} allTags={allTags} onCreateTag={handleCreateTag} profile={profile} />
                     <ImportModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onImportSuccess={handleImportSuccess} />
                     <div className="h-screen w-screen flex flex-col bg-slate-100">
                         <header className="bg-brand-header-blue p-4 flex justify-between items-center flex-shrink-0">
@@ -852,7 +904,11 @@
         
         // --- Ponto de Entrada do React ---
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(
+            <ToastProvider>
+                <App />
+            </ToastProvider>
+        );
 
     </script>
 </body>
