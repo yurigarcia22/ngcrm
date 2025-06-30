@@ -573,21 +573,11 @@
             const { addToast } = useToast();
 
             useEffect(() => {
-                const checkSession = async () => {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    setUser(session?.user ?? null);
-                    if (session?.user) {
-                        await fetchInitialData(session.user.id);
-                    }
-                    setIsLoading(false);
-                };
-
-                checkSession();
-
                 const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-                    setUser(session?.user ?? null);
-                    if (session?.user) {
-                        await fetchInitialData(session.user.id);
+                    const currentUser = session?.user;
+                    setUser(currentUser);
+                    if (currentUser) {
+                        await fetchInitialData(currentUser.id);
                     }
                     setIsLoading(false);
                 });
