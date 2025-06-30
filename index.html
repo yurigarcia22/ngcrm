@@ -573,12 +573,21 @@
             const { addToast } = useToast();
 
             useEffect(() => {
-                setIsLoading(true);
+                const checkSession = async () => {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    setUser(session?.user ?? null);
+                    if (session?.user) {
+                        await fetchInitialData(session.user.id);
+                    }
+                    setIsLoading(false);
+                };
+
+                checkSession();
+
                 const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-                    const currentUser = session?.user;
-                    setUser(currentUser ?? null);
-                    if (currentUser) {
-                        await fetchInitialData(currentUser.id);
+                    setUser(session?.user ?? null);
+                    if (session?.user) {
+                        await fetchInitialData(session.user.id);
                     }
                     setIsLoading(false);
                 });
@@ -627,7 +636,7 @@
                     addToast("Erro ao atualizar o status.", 'error'); 
                 } else { 
                     addToast(`Prospect movido para ${newStatus}.`, 'success'); 
-                    fetchProspects();
+                    await fetchProspects();
                 }
             };
 
@@ -638,20 +647,20 @@
                     const { data, error } = await supabase.from('CRM DADOS').insert({ ...savedProspect, user_id: user.id }).select().single();
                     if (error) {
                         addToast("Erro ao criar prospect: " + error.message, 'error');
-                        return false;
+                        return;
                     }
                     addToast('Prospect criado com sucesso!', 'success');
-                    fetchProspects();
                 } else {
                     const { data, error } = await supabase.from('CRM DADOS').update(savedProspect).eq('id', savedProspect.id).select().single();
                     if(error) {
                          addToast("Erro ao salvar prospect: " + error.message, 'error');
-                         return false;
+                         return;
                     }
                     if (!shouldClose) setSelectedProspect(data);
                     addToast("Alterações salvas com sucesso!", 'success');
-                    fetchProspects();
                 }
+                
+                await fetchProspects();
             
                 if (!isCreating && savedProspect.status === 'Venda') {
                     const originalProspect = prospects.find(p => p.id === savedProspect.id);
@@ -659,7 +668,6 @@
                 }
             
                 if (shouldClose) handleCloseModals();
-                return true;
             };
 
             const handleRegisterCadence = async (prospect, actions) => { 
@@ -674,7 +682,7 @@
                 if (error) { addToast("Erro ao registrar cadência: " + error.message, 'error'); }
                 else { 
                     addToast(`Cadência registrada para ${prospect.name}!`, 'success'); 
-                    fetchTasks();
+                    await fetchTasks();
                 }
             };
 
@@ -683,7 +691,7 @@
                 if (error) { 
                     addToast("Erro ao atualizar tarefa.", 'error'); 
                 } else {
-                    fetchTasks();
+                    await fetchTasks();
                 }
             };
             
@@ -693,7 +701,7 @@
                 if(error) { addToast(`Erro ao agendar tarefa: ${error.message}`, 'error'); }
                 else { 
                     addToast(`Tarefa agendada para ${prospect.name}.`, 'success'); 
-                    fetchTasks();
+                    await fetchTasks();
                 }
             };
 
@@ -716,7 +724,7 @@
                         addToast("Erro ao importar contatos: " + error.message, 'error');
                     } else {
                         addToast(`${newProspectsData.length} contatos importados com sucesso!`, 'success');
-                        fetchProspects();
+                        await fetchProspects();
                     }
                 } else {
                     addToast("Nenhum contato novo para importar (podem ser duplicados).", 'info');
@@ -729,7 +737,7 @@
                     addToast("Erro ao excluir prospect: " + error.message, 'error');
                 } else {
                     addToast("Prospect excluído com sucesso.", 'success');
-                    fetchProspects();
+                    await fetchProspects();
                     handleCloseModals();
                 }
             };
@@ -750,7 +758,7 @@
                 if (error) {
                     addToast("Erro ao salvar observação: " + error.message, 'error');
                 } else {
-                    fetchProspects();
+                    await fetchProspects();
                     setSelectedProspect(data);
                     addToast("Observação adicionada.", 'success');
                 }
@@ -763,7 +771,7 @@
                     addToast("Erro ao criar tag: " + error.message, 'error');
                 } else {
                     addToast(`Tag "${tagName}" criada com sucesso!`, 'success');
-                    fetchTags();
+                    await fetchTags();
                 }
             };
             
