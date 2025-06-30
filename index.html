@@ -54,9 +54,9 @@
         const supabaseUrl = 'https://ekzjsqheinpvebjfjims.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrempzcWhlaW5wdmViamZqaW1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5OTIzNDMsImV4cCI6MjA2NjU2ODM0M30.HrBFnV6ve6po2GeitFXs55ensNljsXs-1aSVwdKHDDA';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-        const KANBAN_STAGES = ['Novo', 'Contato Inicial', 'Contato com Decisor', 'Proposta Enviada', 'Venda', 'Perdido', 'No Show'];
-        const CRM_FIELDS = ['name', 'contact_name', 'email', 'phone', 'value', 'status', 'observation'];
-        const CRM_FIELD_LABELS = { name: 'Nome da Empresa', contact_name: 'Nome do Contato', email: 'E-mail', phone: 'Telefone', value: 'Valor da Proposta', status: 'Status', observation: 'Observação' };
+        const KANBAN_STAGES = ['Novo', 'Contato Inicial', 'Contato com Decisor', 'Reunião Agendada', 'Proposta Enviada', 'Venda', 'Perdido', 'No Show'];
+        const CRM_FIELDS = ['name', 'contact_name', 'email', 'phone', 'value', 'status', 'observation', 'tags'];
+        const CRM_FIELD_LABELS = { name: 'Nome da Empresa', contact_name: 'Nome do Contato', email: 'E-mail', phone: 'Telefone', value: 'Valor da Proposta', status: 'Status', observation: 'Observação', tags: 'Tags' };
         
         // --- 2. ÍCONES SVG ---
         const Icons = {
@@ -89,10 +89,15 @@
             return (<div className="confetti-container">{particles.map(p => (<div key={p.id} className="confetti" style={{ backgroundColor: p.color, left: p.left, animationDuration: p.duration, animationDelay: p.animationDelay, transform: p.transform }}/>))}</div>);
         }
 
-        function ProspectCard({ prospect, onDragStart, onCardClick, contactCount }) {
+        function ProspectCard({ prospect, onDragStart, onCardClick, contactCount, allTags }) {
+            const getTagColor = (tagName) => {
+                const tag = allTags.find(t => t.name === tagName);
+                return tag ? tag.color : '#A0AEC0'; // Cor padrão cinza
+            };
+
             return (
                 <div draggable="true" onDragStart={(e) => { onDragStart(e, prospect.id); e.currentTarget.classList.add('dragging'); }} onDragEnd={(e) => e.currentTarget.classList.remove('dragging')} onClick={() => onCardClick(prospect)}
-                    className="bg-brand-base-white rounded-lg shadow-md p-4 mb-4 border-l-4 border-brand-coral hover:shadow-xl transition-all duration-200 cursor-pointer prospect-card" >
+                    className="bg-white rounded-lg shadow-md p-4 mb-4 border-l-4 border-brand-coral hover:shadow-xl transition-all duration-200 cursor-pointer prospect-card" >
                     <h3 className="font-semibold text-brand-text-dark truncate">{prospect.name}</h3>
                     <div className="text-sm text-gray-500 mt-2 space-y-1.5">
                         <p className="flex items-center text-brand-coral"><span className="mr-2">{Icons.contact}</span>{prospect.contact_name}</p>
@@ -100,11 +105,18 @@
                         <p className="flex items-center"><span className="mr-2 text-brand-coral">{Icons.money}</span>{(prospect.value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                         <p className="flex items-center font-semibold"><span className="mr-2 text-brand-coral">{Icons.interactions}</span>{contactCount} contatos</p>
                     </div>
+                    <div className="mt-3 flex flex-wrap gap-1">
+                        {(prospect.tags || []).map(tag => (
+                            <span key={tag} className="text-xs font-semibold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: getTagColor(tag) }}>
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
                 </div>
             );
         }
 
-        function EditProspectModal({ isOpen, onClose, prospect, users, tasks, onSave, onRegisterCadence, onAddTask, onDelete, onAddObservation }) {
+        function EditProspectModal({ isOpen, onClose, prospect, users, tasks, onSave, onRegisterCadence, onAddTask, onDelete, onAddObservation, allTags, onCreateTag }) {
             if (!isOpen || !prospect) return null;
             const [editedData, setEditedData] = useState(prospect);
             const [selectedActions, setSelectedActions] = useState([]);
@@ -112,7 +124,9 @@
             const [newTaskDate, setNewTaskDate] = useState('');
             const [newObservation, setNewObservation] = useState('');
             const [isDeleting, setIsDeleting] = useState(false);
-            const [expandedSections, setExpandedSections] = useState({ cadencia: true, observacoes: true, alteracoes: true });
+            const [newTagName, setNewTagName] = useState('');
+            const [newTagColor, setNewTagColor] = useState('#4299e1');
+            const [expandedSections, setExpandedSections] = useState({ cadencia: true, observacoes: true, alteracoes: true, tags: true });
             
             useEffect(() => { setEditedData(prospect); setSelectedActions([]); setNewTaskDesc(''); setNewTaskDate(''); setIsDeleting(false); setNewObservation(''); }, [prospect]);
             
@@ -122,6 +136,18 @@
             const handleRegisterClick = () => { if(selectedActions.length === 0) { alert('Selecione pelo menos uma ação para registrar.'); return; } onRegisterCadence(prospect, selectedActions); setSelectedActions([]); };
             const handleScheduleTask = () => { if(!newTaskDesc || !newTaskDate) { alert("Por favor, preencha a descrição e a data da tarefa."); return; } onAddTask(prospect, newTaskDesc, newTaskDate); setNewTaskDesc(''); setNewTaskDate(''); };
             const handleAddObservationClick = () => { if (!newObservation.trim()) return; onAddObservation(prospect, newObservation); setNewObservation(''); };
+
+            const handleTagToggle = (tagName) => {
+                const currentTags = editedData.tags || [];
+                const newTags = currentTags.includes(tagName) ? currentTags.filter(t => t !== tagName) : [...currentTags, tagName];
+                setEditedData(prev => ({...prev, tags: newTags}));
+            };
+
+            const handleCreateTag = () => {
+                if (!newTagName.trim()) { alert('Por favor, insira um nome para a tag.'); return; }
+                onCreateTag(newTagName, newTagColor);
+                setNewTagName('');
+            };
 
             const { cadenceHistory, observationHistory, editHistory } = useMemo(() => {
                 const history = (prospect.edit_history || []);
@@ -186,7 +212,7 @@
         }
         
         function AddProspectModal({ isOpen, onClose, onSave, users, currentUserId }) {
-            const initialData = { name: '', contact_name: '', value: 0, email: '', phone: '', status: 'Novo', user_id: currentUserId, observation: '' };
+            const initialData = { name: '', contact_name: '', value: 0, email: '', phone: '', status: 'Novo', user_id: currentUserId, observation: '', tags: [] };
             const [formData, setFormData] = useState(initialData);
             
             useEffect(() => {
@@ -244,7 +270,7 @@
             </div></div>) );
         }
 
-        function KanbanView({ prospects, users, tasks, onStatusChange, onCardClick, handleDragStart, profile, selectedUserId, setSelectedUserId }) {
+        function KanbanView({ prospects, users, tasks, onStatusChange, onCardClick, handleDragStart, profile, selectedUserId, setSelectedUserId, allTags }) {
             const handleDragOver = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over') };
             const handleDragLeave = (e) => e.currentTarget.classList.remove('drag-over');
             const handleDrop = (e, newStatus) => { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); const prospectId = e.dataTransfer.getData("prospectId"); onStatusChange(parseInt(prospectId), newStatus); };
@@ -259,12 +285,12 @@
                             </select>
                         </div>
                     )}
-                    <div className="flex-1 overflow-x-auto custom-scrollbar"><div className="flex gap-6 min-w-max h-full">{KANBAN_STAGES.map(stage => (<div key={stage} className="bg-brand-base-white/60 rounded-xl w-80 flex-shrink-0 flex flex-col kanban-column border-2 border-transparent transition-colors" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={(e) => handleDrop(e, stage)}><div className={`p-4 border-b-2 ${stage === 'Venda' ? 'bg-green-100 text-green-800' : ''} ${stage === 'Perdido' || stage === 'No Show' ? 'bg-red-100 text-red-800' : ''}`}><h2 className="font-semibold text-brand-text-dark">{stage} <span className="text-sm font-medium text-gray-500">{(prospectsByStage[stage] || []).length}</span></h2></div><div className="p-2 h-full overflow-y-auto custom-scrollbar">{(prospectsByStage[stage] || []).map(prospect => { const contactCount = (tasks || []).filter(t => t.prospect_id === prospect.id && t.completed && t.type === 'Cadência').length; return <ProspectCard key={prospect.id} prospect={prospect} onCardClick={onCardClick} contactCount={contactCount} onDragStart={handleDragStart} />; })}</div></div>))}</div></div>
+                    <div className="flex-1 overflow-x-auto custom-scrollbar"><div className="flex gap-6 min-w-max h-full">{KANBAN_STAGES.map(stage => (<div key={stage} className="bg-brand-base-white/60 rounded-xl w-80 flex-shrink-0 flex flex-col kanban-column border-2 border-transparent transition-colors" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={(e) => handleDrop(e, stage)}><div className={`p-4 border-b-2 ${stage === 'Venda' ? 'bg-green-100 text-green-800' : ''} ${stage === 'Perdido' || stage === 'No Show' ? 'bg-red-100 text-red-800' : ''}`}><h2 className="font-semibold text-brand-text-dark">{stage} <span className="text-sm font-medium text-gray-500">{(prospectsByStage[stage] || []).length}</span></h2></div><div className="p-2 h-full overflow-y-auto custom-scrollbar">{(prospectsByStage[stage] || []).map(prospect => { const contactCount = (tasks || []).filter(t => t.prospect_id === prospect.id && t.completed && t.type === 'Cadência').length; return <ProspectCard key={prospect.id} prospect={prospect} onCardClick={onCardClick} contactCount={contactCount} onDragStart={handleDragStart} allTags={allTags} />; })}</div></div>))}</div></div>
                 </div>
             );
         }
         
-        function ListView({ prospects, users, tasks, onCardClick, onSelect, selectedIds, profile, selectedUserId, setSelectedUserId }) {
+        function ListView({ prospects, users, tasks, onCardClick, onSelect, selectedIds, profile, selectedUserId, setSelectedUserId, allTags }) {
             const [filter, setFilter] = useState(''); const [collapsedStages, setCollapsedStages] = useState({});
             const toggleStage = (stage) => { setCollapsedStages(prev => ({ ...prev, [stage]: !prev[stage] })); };
             const stageColors = { 'Novo': 'bg-gray-500', 'Contato Inicial': 'bg-blue-500', 'Contato com Decisor': 'bg-purple-500', 'Proposta Enviada': 'bg-orange-500', 'Venda': 'bg-green-500', 'Perdido': 'bg-red-500', 'No Show': 'bg-red-700' };
@@ -440,6 +466,7 @@
             const [prospects, setProspects] = useState([]);
             const [tasks, setTasks] = useState([]);
             const [users, setUsers] = useState([]);
+            const [allTags, setAllTags] = useState([]);
             const [view, setView] = useState('kanban');
             const [showConfetti, setShowConfetti] = useState(false);
             const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -449,10 +476,11 @@
             const [selectedIds, setSelectedIds] = useState([]);
             const [selectedUserId, setSelectedUserId] = useState('all');
 
-            const fetchInitialData = async (currentUserId) => { setIsLoading(true); await Promise.all([fetchProspects(), fetchTasks(), fetchProfiles(currentUserId)]); setIsLoading(false); };
+            const fetchInitialData = async (currentUserId) => { setIsLoading(true); await Promise.all([fetchProspects(), fetchTasks(), fetchProfiles(currentUserId), fetchTags()]); setIsLoading(false); };
             const fetchProspects = async () => { const { data, error } = await supabase.from('CRM DADOS').select('*'); if (error) console.error("Erro ao buscar prospects:", error.message); else setProspects(data || []); };
             const fetchTasks = async () => { const { data, error } = await supabase.from('tasks').select('*'); if (error) console.error("Erro ao buscar tarefas:", error.message); else setTasks(data || []); };
             const fetchProfiles = async (currentUserId) => { const { data, error } = await supabase.from('profiles').select('*'); if (error) console.error("Erro ao buscar perfis:", error.message); else { setUsers(data || []); const currentUserProfile = (data || []).find(p => p.id === currentUserId); setProfile(currentUserProfile); } };
+            const fetchTags = async () => { const { data, error } = await supabase.from('tags').select('*'); if (error) console.error("Erro ao buscar tags:", error.message); else setAllTags(data || []); };
 
             useEffect(() => {
                 const checkSession = async () => {
@@ -488,10 +516,10 @@
             
             const seedInitialData = async (userId) => {
                  const sampleProspects = [
-                    { name: 'Empresa de Software Exemplo', contact_name: 'Ana Paula', value: 25000, status: 'Novo', user_id: userId, email: 'ana.paula@software.com', phone: '(11) 91111-2222', edit_history:[] },
-                    { name: 'Marketing Criativo Ltda', contact_name: 'Bruno Carvalho', value: 12000, status: 'Contato Inicial', user_id: userId, email: 'bruno.c@mkt.com', phone: '(21) 92222-3333', edit_history:[] },
-                    { name: 'Logística Total Express', contact_name: 'Carlos Dantas', value: 45000, status: 'Contato com Decisor', user_id: userId, email: 'carlos.dantas@log.com', phone: '(31) 93333-4444', edit_history:[] },
-                    { name: 'Consultoria Financeira Futuro', contact_name: 'Daniela Costa', value: 75000, status: 'Proposta Enviada', user_id: userId, email: 'daniela@consultoria.com', phone: '(41) 94444-5555', edit_history:[] }
+                    { name: 'Empresa de Software Exemplo', contact_name: 'Ana Paula', value: 25000, status: 'Novo', user_id: userId, email: 'ana.paula@software.com', phone: '(11) 91111-2222', edit_history:[], tags: ['Hot Lead'] },
+                    { name: 'Marketing Criativo Ltda', contact_name: 'Bruno Carvalho', value: 12000, status: 'Contato Inicial', user_id: userId, email: 'bruno.c@mkt.com', phone: '(21) 92222-3333', edit_history:[], tags: ['Follow-up'] },
+                    { name: 'Logística Total Express', contact_name: 'Carlos Dantas', value: 45000, status: 'Contato com Decisor', user_id: userId, email: 'carlos.dantas@log.com', phone: '(31) 93333-4444', edit_history:[], tags: [] },
+                    { name: 'Consultoria Financeira Futuro', contact_name: 'Daniela Costa', value: 75000, status: 'Proposta Enviada', user_id: userId, email: 'daniela@consultoria.com', phone: '(41) 94444-5555', edit_history:[], tags: ['Urgente'] }
                 ];
                 const { error } = await supabase.from('CRM DADOS').insert(sampleProspects);
                 if (error) { console.error('Erro ao inserir dados de exemplo:', error); }
@@ -649,7 +677,7 @@
             }, [tasks, selectedUserId, profile]);
             
             const renderView = () => {
-                const props = { prospects: filteredData, users, tasks: filteredTasksForViews, onCardClick: handleCardClick, handleDragStart, onStatusChange: handleStatusChange, onSelect: handleSelectProspect, selectedIds, onTaskToggle: handleTaskToggle, profile, selectedUserId, setSelectedUserId };
+                const props = { prospects: filteredData, users, tasks: filteredTasksForViews, onCardClick: handleCardClick, handleDragStart, onStatusChange: handleStatusChange, onSelect: handleSelectProspect, selectedIds, onTaskToggle: handleTaskToggle, profile, selectedUserId, setSelectedUserId, allTags };
                 switch (view) {
                     case 'kanban': return <KanbanView {...props} />;
                     case 'list': return <ListView {...props} />;
