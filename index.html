@@ -544,6 +544,8 @@
                 await fetchProspects();
                 if (shouldClose) {
                     handleCloseModals();
+                } else {
+                    alert("Alterações salvas com sucesso!");
                 }
                 return true;
             };
