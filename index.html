@@ -574,9 +574,10 @@
 
             useEffect(() => {
                 const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-                    setUser(session?.user ?? null);
-                    if (session?.user) {
-                        await fetchInitialData(session.user.id);
+                    const currentUser = session?.user;
+                    setUser(currentUser);
+                    if (currentUser) {
+                        await fetchInitialData(currentUser.id);
                     }
                     setIsLoading(false);
                 });
@@ -587,14 +588,12 @@
             }, []);
 
             const fetchInitialData = async (currentUserId) => {
-                setIsLoading(true);
                 await Promise.all([
                     fetchProspects(), 
                     fetchTasks(), 
                     fetchProfiles(currentUserId), 
                     fetchTags()
                 ]);
-                setIsLoading(false);
             };
 
             const fetchProspects = async () => { const { data, error } = await supabase.from('CRM DADOS').select('*').order('created_at'); if (error) console.error("Erro ao buscar prospects:", error.message); else setProspects(data || []); };
