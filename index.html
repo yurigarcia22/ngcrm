@@ -573,25 +573,19 @@
             const { addToast } = useToast();
 
             useEffect(() => {
-                const checkSession = async () => {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    setUser(session?.user ?? null);
-                    if (session?.user) {
-                        await fetchInitialData(session.user.id);
+                setIsLoading(true);
+                const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+                    const currentUser = session?.user;
+                    setUser(currentUser ?? null);
+                    if (currentUser) {
+                        await fetchInitialData(currentUser.id);
                     }
                     setIsLoading(false);
-                };
-                checkSession();
-
-                const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-                    setUser(session?.user ?? null);
-                    if (session?.user) {
-                        setIsLoading(true);
-                        await fetchInitialData(session.user.id);
-                        setIsLoading(false);
-                    }
                 });
-                return () => authListener.subscription.unsubscribe();
+            
+                return () => {
+                    authListener.subscription.unsubscribe();
+                };
             }, []);
 
             const fetchInitialData = async (currentUserId) => {
