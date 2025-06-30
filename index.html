@@ -311,8 +311,7 @@
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                onSave(formData);
-                onClose();
+                onSave(formData, true);
             };
 
             return (
@@ -434,7 +433,7 @@
                 const isOverdue = new Date(task.due_date) < new Date() && !task.completed;
                 return (
                     <div onClick={() => prospect && onCardClick(prospect)} className="bg-brand-base-white rounded-lg shadow-md p-4 flex items-center justify-between hover:shadow-lg transition-shadow cursor-pointer">
-                        <div className="flex items-center"><input type="checkbox" checked={task.completed} onClick={(e) => e.stopPropagation()} onChange={() => onTaskToggle(task.id)} className="h-5 w-5 rounded border-gray-300 text-brand-coral focus:ring-brand-coral"/><div className="ml-4"><p className="text-sm font-medium text-brand-text-dark">{task.description}</p><p className="text-sm text-gray-500">Para: <span className="font-semibold">{prospect?.name || 'Prospect não encontrado'}</span></p></div></div>
+                        <div className="flex items-center"><input type="checkbox" checked={task.completed} onClick={(e) => e.stopPropagation()} onChange={() => onTaskToggle(task.id, !task.completed)} className="h-5 w-5 rounded border-gray-300 text-brand-coral focus:ring-brand-coral"/><div className="ml-4"><p className="text-sm font-medium text-brand-text-dark">{task.description}</p><p className="text-sm text-gray-500">Para: <span className="font-semibold">{prospect?.name || 'Prospect não encontrado'}</span></p></div></div>
                         <div className="flex items-center space-x-4"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${task.completed ? 'bg-gray-100 text-gray-800' : (isOverdue ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800')}`}>Vencimento: {new Date(task.due_date).toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'})}</span><span className="flex items-center text-gray-600" title={`Responsável: ${user?.name || 'Não encontrado'}`}><span className="text-lg">{user?.avatar || '👤'}</span></span></div>
                     </div>
                 );
@@ -573,65 +572,42 @@
             const [selectedUserId, setSelectedUserId] = useState('all');
             const { addToast } = useToast();
 
-            const fetchInitialData = async (currentUserId) => { setIsLoading(true); await Promise.all([fetchProspects(), fetchTasks(), fetchProfiles(currentUserId), fetchTags()]); setIsLoading(false); };
-            const fetchProspects = async () => { const { data, error } = await supabase.from('CRM DADOS').select('*'); if (error) console.error("Erro ao buscar prospects:", error.message); else setProspects(data || []); };
-            const fetchTasks = async () => { const { data, error } = await supabase.from('tasks').select('*'); if (error) console.error("Erro ao buscar tarefas:", error.message); else setTasks(data || []); };
-            const fetchProfiles = async (currentUserId) => { const { data, error } = await supabase.from('profiles').select('*'); if (error) console.error("Erro ao buscar perfis:", error.message); else { setUsers(data || []); const currentUserProfile = (data || []).find(p => p.id === currentUserId); setProfile(currentUserProfile); if(currentUserProfile && currentUserProfile.role !== 'admin') { setSelectedUserId(currentUserId); } else { setSelectedUserId('all'); } } };
-            const fetchTags = async () => { const { data, error } = await supabase.from('tags').select('*'); if (error) console.error("Erro ao buscar tags:", error.message); else setAllTags(data || []); };
-
             useEffect(() => {
                 const checkSession = async () => {
                     const { data: { session } } = await supabase.auth.getSession();
                     setUser(session?.user ?? null);
-                    if (!session?.user) setIsLoading(false);
+                    if (session?.user) {
+                        await fetchInitialData(session.user.id);
+                    }
+                    setIsLoading(false);
                 };
                 checkSession();
-                const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => { setUser(session?.user ?? null); if (!session?.user) setIsLoading(false); });
+
+                const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+                    setUser(session?.user ?? null);
+                    if (session?.user) {
+                        setIsLoading(true);
+                        await fetchInitialData(session.user.id);
+                        setIsLoading(false);
+                    }
+                });
                 return () => authListener.subscription.unsubscribe();
             }, []);
 
-            useEffect(() => {
-                if(user){
-                    const setupData = async () => {
-                        setIsLoading(true);
-                        await fetchInitialData(user.id);
-                    };
-                    setupData();
-                }
-            }, [user]);
+            const fetchInitialData = async (currentUserId) => {
+                await Promise.all([
+                    fetchProspects(), 
+                    fetchTasks(), 
+                    fetchProfiles(currentUserId), 
+                    fetchTags()
+                ]);
+            };
 
-            useEffect(() => {
-                if (!user) return;
-                
-                const handleRealtimeUpdate = (payload, setter, idField = 'id') => {
-                    const { eventType, new: newRecord, old: oldRecord } = payload;
-                    setter(currentData => {
-                        if (eventType === 'INSERT') return [...currentData, newRecord];
-                        if (eventType === 'UPDATE') return currentData.map(item => item[idField] === newRecord[idField] ? newRecord : item);
-                        if (eventType === 'DELETE') return currentData.filter(item => item[idField] !== oldRecord[idField]);
-                        return currentData;
-                    });
-                };
+            const fetchProspects = async () => { const { data, error } = await supabase.from('CRM DADOS').select('*').order('created_at'); if (error) console.error("Erro ao buscar prospects:", error.message); else setProspects(data || []); };
+            const fetchTasks = async () => { const { data, error } = await supabase.from('tasks').select('*'); if (error) console.error("Erro ao buscar tarefas:", error.message); else setTasks(data || []); };
+            const fetchProfiles = async (currentUserId) => { const { data, error } = await supabase.from('profiles').select('*'); if (error) console.error("Erro ao buscar perfis:", error.message); else { setUsers(data || []); const currentUserProfile = (data || []).find(p => p.id === currentUserId); setProfile(currentUserProfile); if(currentUserProfile && currentUserProfile.role !== 'admin') { setSelectedUserId(currentUserId); } else { setSelectedUserId('all'); } } };
+            const fetchTags = async () => { const { data, error } = await supabase.from('tags').select('*'); if (error) console.error("Erro ao buscar tags:", error.message); else setAllTags(data || []); };
 
-                const prospectChannel = supabase.channel('public:CRM DADOS')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'CRM DADOS' }, (payload) => handleRealtimeUpdate(payload, setProspects))
-                    .subscribe();
-
-                const taskChannel = supabase.channel('public:tasks')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => handleRealtimeUpdate(payload, setTasks))
-                    .subscribe();
-                
-                const tagChannel = supabase.channel('public:tags')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'tags' }, (payload) => handleRealtimeUpdate(payload, setAllTags))
-                    .subscribe();
-
-                return () => {
-                    supabase.removeChannel(prospectChannel);
-                    supabase.removeChannel(taskChannel);
-                    supabase.removeChannel(tagChannel);
-                };
-            }, [user]);
-            
             const handleLogin = async (e) => { e.preventDefault(); try { const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) { throw error; } addToast('Login bem-sucedido!', 'success'); } catch (error) { addToast(error.message, 'error'); } };
             const handleLogout = async () => { await supabase.auth.signOut(); addToast('Você saiu da sua conta.'); };
             const handleCardClick = (prospect) => { setSelectedProspect(prospect); setIsEditModalOpen(true); };
@@ -652,12 +628,18 @@
                 
                 if (originalStatus !== 'Venda' && newStatus === 'Venda') triggerCelebration();
                 
+                setProspects(prev => prev.map(p => p.id === prospectId ? { ...p, status: newStatus } : p));
+
                 const changeLog = { field: 'status', oldValue: originalStatus, newValue: newStatus, timestamp: new Date().toISOString(), user_id: user.id };
                 const updatedHistory = [...(prospect.edit_history || []), changeLog];
 
                 const { error } = await supabase.from('CRM DADOS').update({ status: newStatus, edit_history: updatedHistory }).eq('id', prospectId);
-                if (error) { addToast("Erro ao atualizar o status.", 'error'); }
-                else { addToast(`Prospect movido para ${newStatus}.`, 'success'); }
+                if (error) { 
+                    addToast("Erro ao atualizar o status.", 'error'); 
+                    setProspects(prev => prev.map(p => p.id === prospectId ? { ...p, status: originalStatus } : p)); // Revert on error
+                } else { 
+                    addToast(`Prospect movido para ${newStatus}.`, 'success'); 
+                }
             };
 
             const handleSaveProspect = async (savedProspect, shouldClose = true) => {
@@ -668,60 +650,49 @@
                     return false;
                 }
             
-                let error;
-            
                 if (isCreating) {
-                    const dataToSave = { ...savedProspect };
+                    const dataToSave = { ...savedProspect, user_id: user.id };
                     delete dataToSave.id;
-                    const initialHistory = savedProspect.observation 
-                        ? [{ field: 'observation', content: savedProspect.observation, timestamp: new Date().toISOString(), user_id: user.id }]
-                        : [];
+                    const initialHistory = savedProspect.observation ? [{ field: 'observation', content: savedProspect.observation, timestamp: new Date().toISOString(), user_id: user.id }] : [];
                     dataToSave.edit_history = initialHistory;
                     delete dataToSave.observation;
-                    ({ error } = await supabase.from('CRM DADOS').insert({ ...dataToSave, user_id: user.id }).select());
+
+                    const { data, error } = await supabase.from('CRM DADOS').insert(dataToSave).select().single();
+                    if (error) {
+                        addToast("Erro ao criar prospect: " + error.message, 'error');
+                        return false;
+                    }
+                    setProspects(prev => [...prev, data]);
+                    addToast('Prospect criado com sucesso!', 'success');
                 } else {
                     const changeLog = [];
                     for (const key in savedProspect) {
                         if (originalProspect && JSON.stringify(originalProspect[key]) !== JSON.stringify(savedProspect[key])) {
-                            changeLog.push({
-                                field: key,
-                                oldValue: originalProspect[key],
-                                newValue: savedProspect[key],
-                                timestamp: new Date().toISOString(),
-                                user_id: user.id
-                            });
+                            changeLog.push({ field: key, oldValue: originalProspect[key], newValue: savedProspect[key], timestamp: new Date().toISOString(), user_id: user.id });
                         }
                     }
             
                     if (changeLog.length > 0) {
                         const updatedData = { ...savedProspect, edit_history: [...(originalProspect.edit_history || []), ...changeLog] };
                         delete updatedData.id;
-                        ({ error } = await supabase.from('CRM DADOS').update(updatedData).eq('id', savedProspect.id));
+                        const { data, error } = await supabase.from('CRM DADOS').update(updatedData).eq('id', savedProspect.id).select().single();
+                        if(error) {
+                             addToast("Erro ao salvar prospect: " + error.message, 'error');
+                             return false;
+                        }
+                        setProspects(prev => prev.map(p => p.id === data.id ? data : p));
+                        if (!shouldClose) setSelectedProspect(data);
+                        addToast("Alterações salvas com sucesso!", 'success');
                     } else {
                         if (!shouldClose) addToast("Nenhuma alteração para salvar.", 'info');
-                        return true;
                     }
-                }
-            
-                if (error) {
-                    addToast("Erro ao salvar prospect: " + error.message, 'error');
-                    return false;
                 }
             
                 if (!isCreating && savedProspect.status === 'Venda' && originalProspect?.status !== 'Venda') {
                     triggerCelebration();
                 }
             
-                if (shouldClose) {
-                    handleCloseModals();
-                    addToast(isCreating ? 'Prospect criado com sucesso!' : 'Alterações salvas com sucesso!', 'success');
-                } else {
-                    const { data: updatedProspect } = await supabase.from('CRM DADOS').select('*').eq('id', savedProspect.id).single();
-                    if (updatedProspect) {
-                        setSelectedProspect(updatedProspect);
-                    }
-                    addToast("Alterações salvas com sucesso!", 'success');
-                }
+                if (shouldClose) handleCloseModals();
                 return true;
             };
 
@@ -733,22 +704,31 @@
                     await handleStatusChange(prospect.id, 'Venda');
                 }
                 const newTask = { prospect_id: prospect.id, user_id: user.id, description: `Cadência: ${actions.join(', ')}`, due_date: new Date().toISOString().split('T')[0], completed: true, type: 'Cadência' }; 
-                const { error } = await supabase.from('tasks').insert(newTask);
+                const { data, error } = await supabase.from('tasks').insert(newTask).select().single();
                 if (error) { addToast("Erro ao registrar cadência: " + error.message, 'error'); }
-                else { addToast(`Cadência registrada para ${prospect.name}!`, 'success'); }
+                else { 
+                    setTasks(prev => [...prev, data]);
+                    addToast(`Cadência registrada para ${prospect.name}!`, 'success'); 
+                }
             };
 
-            const handleTaskToggle = async (taskId) => {
-                const task = tasks.find(t => t.id === taskId);
-                const { error } = await supabase.from('tasks').update({ completed: !task.completed }).eq('id', taskId);
-                if (error) { addToast("Erro ao atualizar tarefa.", 'error'); }
+            const handleTaskToggle = async (taskId, newStatus) => {
+                setTasks(prev => prev.map(t => t.id === taskId ? {...t, completed: newStatus} : t));
+                const { error } = await supabase.from('tasks').update({ completed: newStatus }).eq('id', taskId);
+                if (error) { 
+                    addToast("Erro ao atualizar tarefa.", 'error'); 
+                    setTasks(prev => prev.map(t => t.id === taskId ? {...t, completed: !newStatus} : t)); // Revert
+                }
             };
             
             const handleAddTask = async (prospect, description, dueDate) => { 
                 const newTask = { prospect_id: prospect.id, user_id: user.id, description, due_date: dueDate, completed: false, type: 'Follow-up' }; 
-                const { error } = await supabase.from('tasks').insert(newTask);
+                const { data, error } = await supabase.from('tasks').insert(newTask).select().single();
                 if(error) { addToast(`Erro ao agendar tarefa: ${error.message}`, 'error'); }
-                else { addToast(`Tarefa agendada para ${prospect.name}.`, 'success'); }
+                else { 
+                    setTasks(prev => [...prev, data]);
+                    addToast(`Tarefa agendada para ${prospect.name}.`, 'success'); 
+                }
             };
 
             const handleDragStart = (e, prospectId) => e.dataTransfer.setData("prospectId", prospectId);
@@ -770,6 +750,7 @@
                         addToast("Erro ao importar contatos: " + error.message, 'error');
                     } else {
                         addToast(`${newProspectsData.length} contatos importados com sucesso!`, 'success');
+                        fetchProspects();
                     }
                 } else {
                     addToast("Nenhum contato novo para importar (podem ser duplicados).", 'info');
@@ -781,6 +762,7 @@
                 if (error) {
                     addToast("Erro ao excluir prospect: " + error.message, 'error');
                 } else {
+                    setProspects(prev => prev.filter(p => p.id !== prospectId));
                     addToast("Prospect excluído com sucesso.", 'success');
                     handleCloseModals();
                 }
@@ -797,22 +779,24 @@
                 const currentHistory = prospect.edit_history || [];
                 const updatedHistory = [...currentHistory, newObservation];
 
-                const { error } = await supabase.from('CRM DADOS').update({ edit_history: updatedHistory }).eq('id', prospect.id);
+                const { data, error } = await supabase.from('CRM DADOS').update({ edit_history: updatedHistory }).eq('id', prospect.id).select().single();
 
                 if (error) {
                     addToast("Erro ao salvar observação: " + error.message, 'error');
                 } else {
-                    setSelectedProspect(prev => ({...prev, edit_history: updatedHistory}));
+                    setProspects(prev => prev.map(p => p.id === data.id ? data : p));
+                    setSelectedProspect(data);
                     addToast("Observação adicionada.", 'success');
                 }
             };
 
             const handleCreateTag = async (tagName, tagColor) => {
                 if (!tagName.trim()) return;
-                const { data, error } = await supabase.from('tags').insert([{ name: tagName, color: tagColor }]).select();
+                const { data, error } = await supabase.from('tags').insert([{ name: tagName, color: tagColor }]).select().single();
                 if (error) {
                     addToast("Erro ao criar tag: " + error.message, 'error');
                 } else {
+                    setAllTags(prev => [...prev, data]);
                     addToast(`Tag "${tagName}" criada com sucesso!`, 'success');
                 }
             };
