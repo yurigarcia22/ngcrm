@@ -387,7 +387,7 @@
                 return (
                     <div onClick={() => prospect && onCardClick(prospect)} className="bg-brand-base-white rounded-lg shadow-md p-4 flex items-center justify-between hover:shadow-lg transition-shadow cursor-pointer">
                         <div className="flex items-center"><input type="checkbox" checked={task.completed} onClick={(e) => e.stopPropagation()} onChange={() => onTaskToggle(task.id)} className="h-5 w-5 rounded border-gray-300 text-brand-coral focus:ring-brand-coral"/><div className="ml-4"><p className="text-sm font-medium text-brand-text-dark">{task.description}</p><p className="text-sm text-gray-500">Para: <span className="font-semibold">{prospect?.name || 'Prospect não encontrado'}</span></p></div></div>
-                        <div className="flex items-center space-x-4"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${task.completed ? 'bg-gray-100 text-gray-800' : (isOverdue ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800')}`}>Vencimento: {new Date(task.due_date).toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'})}</span><span className="flex items-center text-gray-600" title={`Responsável: ${user?.name || 'Não encontrado'}`}><span className="text-lg">{user?.avatar || '�'}</span></span></div>
+                        <div className="flex items-center space-x-4"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${task.completed ? 'bg-gray-100 text-gray-800' : (isOverdue ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800')}`}>Vencimento: {new Date(task.due_date).toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'})}</span><span className="flex items-center text-gray-600" title={`Responsável: ${user?.name || 'Não encontrado'}`}><span className="text-lg">{user?.avatar || '👤'}</span></span></div>
                     </div>
                 );
             };
@@ -611,35 +611,58 @@
                 const isCreating = !savedProspect.id;
                 const originalProspect = isCreating ? null : prospects.find(p => p.id === savedProspect.id);
                 if (!isCreating && savedProspect.status === 'Venda' && originalProspect?.status !== 'Proposta Enviada') {
-                    alert('Não é possível alterar o status para "Venda" sem antes estar em "Proposta Enviada".'); return false;
+                    alert('Não é possível alterar o status para "Venda" sem antes estar em "Proposta Enviada".');
+                    return false;
                 }
-                
-                const dataToSave = { ...savedProspect };
+            
                 let error;
-
+            
                 if (isCreating) {
+                    const dataToSave = { ...savedProspect };
                     delete dataToSave.id;
-                    const initialHistory = [{ field: 'observation', content: savedProspect.observation, timestamp: new Date().toISOString() }];
+                    const initialHistory = savedProspect.observation 
+                        ? [{ field: 'observation', content: savedProspect.observation, timestamp: new Date().toISOString(), user_id: user.id }]
+                        : [];
                     dataToSave.edit_history = initialHistory;
                     delete dataToSave.observation;
-                    ({ error } = await supabase.from('CRM DADOS').insert({...dataToSave, user_id: user.id }).select());
+                    ({ error } = await supabase.from('CRM DADOS').insert({ ...dataToSave, user_id: user.id }).select());
                 } else {
                     const changeLog = [];
-                    for (const key in savedProspect) { if (originalProspect && originalProspect[key] !== savedProspect[key]) { changeLog.push({ field: key, oldValue: originalProspect[key], newValue: savedProspect[key], timestamp: new Date().toISOString() }); } }
-                    const updatedData = { ...savedProspect, edit_history: [...(originalProspect.edit_history || []), ...changeLog]};
+                    // Loop to build the change history log
+                    for (const key in savedProspect) {
+                        // Use JSON.stringify for robust comparison of arrays/objects
+                        if (originalProspect && JSON.stringify(originalProspect[key]) !== JSON.stringify(savedProspect[key])) {
+                            changeLog.push({
+                                field: key,
+                                oldValue: originalProspect[key],
+                                newValue: savedProspect[key],
+                                timestamp: new Date().toISOString(),
+                                user_id: user.id
+                            });
+                        }
+                    }
+            
+                    const updatedData = { ...savedProspect, edit_history: [...(originalProspect.edit_history || []), ...changeLog] };
                     delete updatedData.id;
                     ({ error } = await supabase.from('CRM DADOS').update(updatedData).eq('id', savedProspect.id));
                 }
-
-                if (error) { alert("Erro ao salvar prospect: " + error.message); return false; }
-
-                if (savedProspect.status === 'Venda' && originalProspect?.status !== 'Venda') triggerCelebration();
-                
+            
+                if (error) {
+                    alert("Erro ao salvar prospect: " + error.message);
+                    return false;
+                }
+            
+                if (!isCreating && savedProspect.status === 'Venda' && originalProspect?.status !== 'Venda') {
+                    triggerCelebration();
+                }
+            
                 if (shouldClose) {
                     handleCloseModals();
                 } else {
                     const { data: updatedProspect } = await supabase.from('CRM DADOS').select('*').eq('id', savedProspect.id).single();
-                    if(updatedProspect) setSelectedProspect(updatedProspect);
+                    if (updatedProspect) {
+                        setSelectedProspect(updatedProspect);
+                    }
                     alert("Alterações salvas com sucesso!");
                 }
                 return true;
@@ -834,4 +857,3 @@
     </script>
 </body>
 </html>
-�
