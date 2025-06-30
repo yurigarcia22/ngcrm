@@ -574,10 +574,9 @@
 
             useEffect(() => {
                 const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-                    const currentUser = session?.user;
-                    setUser(currentUser);
-                    if (currentUser) {
-                        await fetchInitialData(currentUser.id);
+                    setUser(session?.user ?? null);
+                    if (session?.user) {
+                        await fetchInitialData(session.user.id);
                     }
                     setIsLoading(false);
                 });
