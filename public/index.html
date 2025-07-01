@@ -1,865 +1,1479 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR" class="light">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NG PROSPECT</title>
-    
-    <!-- Scripts com DEFER para garantir a ordem de carregamento correta -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'brand-header-blue': '#263370',
-              'brand-logo-coral': '#ED756E',
-              'brand-coral': '#F75E67',
-              'brand-dark-blue': '#202C6D',
-              'brand-base-white': '#F5F5F5',
-              'brand-text-dark': '#333333',
-            }
-          }
-        }
-      }
-    </script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" defer></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" defer></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #F5F5F5; overflow: hidden; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
-        .kanban-column.drag-over { background-color: rgba(247, 94, 103, 0.1) !important; }
-        .prospect-card.dragging { opacity: 0.5; transform: rotate(3deg) scale(1.05); }
-        .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
-        .confetti { position: absolute; width: 10px; height: 10px; opacity: 0.7; animation: fall 4s linear forwards; }
-        @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
-        .login-container, .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #202C6D; color: white; }
-        
-        /* Estilos para o Toast */
-        .toast-container { position: fixed; top: 1.25rem; right: 1.25rem; z-index: 10000; display: flex; flex-direction: column; gap: 0.75rem; }
-        .toast { display: flex; align-items: center; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); color: white; animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-in 2.7s forwards; }
-        .toast-success { background-color: #10B981; }
-        .toast-error { background-color: #EF4444; }
-        .toast-info { background-color: #3B82F6; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateX(100%); } }
-    </style>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NG PROSPECT</title>
+
+    
+
+    <!-- Scripts com DEFER para garantir a ordem de carregamento correta -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+
+      tailwind.config = {
+
+        theme: {
+
+          extend: {
+
+            colors: {
+
+              'brand-header-blue': '#263370',
+
+              'brand-logo-coral': '#ED756E',
+
+              'brand-coral': '#F75E67',
+
+              'brand-dark-blue': '#202C6D',
+
+            }
+
+          }
+
+        }
+
+      }
+
+    </script>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js" defer></script>
+
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" defer></script>
+
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js" defer></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+
+    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    
+
+    <style>
+
+        body { font-family: 'Poppins', sans-serif; background-color: #F5F5F5; overflow: hidden; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 8px; }
+
+        .custom-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+
+        .kanban-column.drag-over { background-color: rgba(247, 94, 103, 0.1) !important; }
+
+        .prospect-card.dragging { opacity: 0.5; transform: rotate(3deg) scale(1.05); }
+
+        .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        .confetti { position: absolute; width: 10px; height: 10px; opacity: 0.7; animation: fall 4s linear forwards; }
+
+        @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+        .login-container, .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #202C6D; color: white; }
+
+    </style>
+
 </head>
+
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useMemo, useEffect, Fragment, useRef, createContext, useContext } = React;
+    <div id="root"></div>
 
-        // --- 1. CONFIGURAÇÃO E CONSTANTES ---
-        const supabaseUrl = 'https://ekzjsqheinpvebjfjims.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrempzcWhlaW5wdmViamZqaW1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5OTIzNDMsImV4cCI6MjA2NjU2ODM0M30.HrBFnV6ve6po2GeitFXs55ensNljsXs-1aSVwdKHDDA';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-        const KANBAN_STAGES = ['Novo', 'Contato Inicial', 'Contato com Decisor', 'Reunião Agendada', 'Proposta Enviada', 'Venda', 'Perdido', 'No Show'];
-        const CRM_FIELDS = ['name', 'contact_name', 'email', 'phone', 'value', 'status', 'observation', 'tags'];
-        const CRM_FIELD_LABELS = { name: 'Nome da Empresa', contact_name: 'Nome do Contato', email: 'E-mail', phone: 'Telefone', value: 'Valor da Proposta', status: 'Status', observation: 'Observação', tags: 'Tags' };
-        
-        // --- 2. ÍCONES SVG ---
-        const Icons = {
-            dashboard: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20V16"/></svg>,
-            kanban: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>,
-            list: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
-            tasks: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
-            contact: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 18a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2"/><rect x="3" y="4" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="2"/></svg>,
-            phone: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
-            money: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
-            interactions: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>,
-            upload: <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-4-4V7a4 4 0 014-4h1.586A2 2 0 0114.172 4.414l.707.707A2 2 0 0016.586 6H17a4 4 0 014 4v5a4 4 0 01-4 4H7z M12 12a3 3 0 100-6 3 3 0 000 6z" /></svg>,
-            check: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>,
-            cross: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>,
-            edit: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" /></svg>,
-            taskLog: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>,
-            search: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>,
-            arrow: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>,
-            calendar: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
-            filter: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" /></svg>,
-            trash: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-        };
 
-        // --- 3. SISTEMA DE NOTIFICAÇÃO (Toast) ---
-        const ToastContext = createContext();
 
-        function ToastProvider({ children }) {
-            const [toasts, setToasts] = useState([]);
+    <script type="text/babel">
 
-            const addToast = (message, type = 'info') => {
-                const id = Date.now();
-                setToasts(prev => [...prev, { id, message, type }]);
-                setTimeout(() => {
-                    setToasts(prev => prev.filter(t => t.id !== id));
-                }, 3000);
-            };
+        const { useState, useMemo, useEffect, Fragment, useRef } = React;
 
-            return (
-                <ToastContext.Provider value={{ addToast }}>
-                    {children}
-                    <div className="toast-container">
-                        {toasts.map(toast => (
-                            <div key={toast.id} className={`toast toast-${toast.type}`}>
-                                {toast.message}
-                            </div>
-                        ))}
-                    </div>
-                </ToastContext.Provider>
-            );
-        }
 
-        const useToast = () => useContext(ToastContext);
 
-        // --- 4. COMPONENTES DE UI ---
+        // --- 1. CONFIGURAÇÃO E CONSTANTES ---
 
-        function Confetti() {
-            const confettiCount = 150;
-            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722'];
-            const particles = useMemo(() => Array.from({ length: confettiCount }).map((_, i) => ({ id: i, color: colors[Math.floor(Math.random() * colors.length)], left: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 4}s`, duration: `${2 + Math.random() * 2}s`, transform: `rotate(${Math.random() * 360}deg)` })), []);
-            return (<div className="confetti-container">{particles.map(p => (<div key={p.id} className="confetti" style={{ backgroundColor: p.color, left: p.left, animationDuration: p.duration, animationDelay: p.animationDelay, transform: p.transform }}/>))}</div>);
-        }
+        const supabaseUrl = 'https://ekzjsqheinpvebjfjims.supabase.co';
 
-        function ProspectCard({ prospect, onDragStart, onCardClick, contactCount, allTags }) {
-            const getTagColor = (tagName) => {
-                const tag = allTags.find(t => t.name === tagName);
-                return tag ? tag.color : '#A0AEC0'; // Cor padrão cinza
-            };
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrempzcWhlaW5wdmViamZqaW1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5OTIzNDMsImV4cCI6MjA2NjU2ODM0M30.HrBFnV6ve6po2GeitFXs55ensNljsXs-1aSVwdKHDDA';
 
-            return (
-                <div draggable="true" onDragStart={(e) => { onDragStart(e, prospect.id); e.currentTarget.classList.add('dragging'); }} onDragEnd={(e) => e.currentTarget.classList.remove('dragging')} onClick={() => onCardClick(prospect)}
-                    className="bg-white rounded-lg shadow-md p-4 mb-4 border-l-4 border-brand-coral hover:shadow-xl transition-all duration-200 cursor-pointer prospect-card" >
-                    <h3 className="font-semibold text-brand-text-dark truncate">{prospect.name}</h3>
-                    <div className="text-sm text-gray-500 mt-2 space-y-1.5">
-                        <p className="flex items-center text-brand-coral"><span className="mr-2">{Icons.contact}</span>{prospect.contact_name}</p>
-                        <p className="flex items-center font-medium text-gray-600"><span className="mr-2 text-brand-coral">{Icons.phone}</span>{prospect.phone}</p>
-                        <p className="flex items-center"><span className="mr-2 text-brand-coral">{Icons.money}</span>{(prospect.value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                        <p className="flex items-center font-semibold"><span className="mr-2 text-brand-coral">{Icons.interactions}</span>{contactCount} contatos</p>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                        {(prospect.tags || []).map(tag => (
-                            <span key={tag} className="text-xs font-semibold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: getTagColor(tag) }}>
-                                {tag}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            );
-        }
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        function EditProspectModal({ isOpen, onClose, prospect, users, tasks, onSave, onRegisterCadence, onAddTask, onDelete, onAddObservation, allTags, onCreateTag, profile }) {
-            if (!isOpen || !prospect) return null;
-            const { addToast } = useToast();
-            const [editedData, setEditedData] = useState(prospect);
-            const [selectedActions, setSelectedActions] = useState([]);
-            const [newTaskDesc, setNewTaskDesc] = useState('');
-            const [newTaskDate, setNewTaskDate] = useState('');
-            const [newObservation, setNewObservation] = useState('');
-            const [isDeleting, setIsDeleting] = useState(false);
-            const [newTagName, setNewTagName] = useState('');
-            const [newTagColor, setNewTagColor] = useState('#4299e1');
-            const [expandedSections, setExpandedSections] = useState({ cadencia: true, observacoes: true, alteracoes: true, tags: true });
-            
-            useEffect(() => { setEditedData(prospect); setSelectedActions([]); setNewTaskDesc(''); setNewTaskDate(''); setIsDeleting(false); setNewObservation(''); }, [prospect]);
-            
-            const handleChange = (e) => { const { name, value } = e.target; setEditedData(prev => ({...prev, [name]: name === 'value' ? parseFloat(value) || 0 : value })); };
-            const handleSave = () => { onSave(editedData, false); };
-            const handleActionToggle = (actionType) => { setSelectedActions(prev => prev.includes(actionType) ? prev.filter(a => a !== actionType) : [...prev, actionType]); };
-            const handleRegisterClick = () => { if(selectedActions.length === 0) { addToast('Selecione pelo menos uma ação para registrar.', 'error'); return; } onRegisterCadence(prospect, selectedActions); setSelectedActions([]); };
-            const handleScheduleTask = () => { if(!newTaskDesc || !newTaskDate) { addToast("Por favor, preencha a descrição e a data da tarefa.", 'error'); return; } onAddTask(prospect, newTaskDesc, newTaskDate); setNewTaskDesc(''); setNewTaskDate(''); };
-            const handleAddObservationClick = () => { if (!newObservation.trim()) return; onAddObservation(prospect, newObservation); setNewObservation(''); };
+        const KANBAN_STAGES = ['Novo', 'Contato Inicial', 'Contato com Decisor', 'Reunião Agendada', 'Proposta Enviada', 'Venda', 'Perdido', 'No Show'];
 
-            const handleTagToggle = (tagName) => {
-                const currentTags = editedData.tags || [];
-                const newTags = currentTags.includes(tagName) ? currentTags.filter(t => t !== tagName) : [...currentTags, tagName];
-                setEditedData(prev => ({...prev, tags: newTags}));
-            };
+        const CRM_FIELDS = ['name', 'contact_name', 'email', 'phone', 'value', 'status', 'observation', 'tags'];
 
-            const handleCreateTag = () => {
-                if (!newTagName.trim()) { addToast('Por favor, insira um nome para a tag.', 'error'); return; }
-                onCreateTag(newTagName, newTagColor);
-                setNewTagName('');
-            };
+        const CRM_FIELD_LABELS = { name: 'Nome da Empresa', contact_name: 'Nome do Contato', email: 'E-mail', phone: 'Telefone', value: 'Valor da Proposta', status: 'Status', observation: 'Observação', tags: 'Tags' };
 
-            const { cadenceHistory, observationHistory, editHistory } = useMemo(() => {
-                const history = (prospect.edit_history || []);
-                const cadence = (tasks || []).filter(t => t.prospect_id === prospect.id && t.type === 'Cadência').sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-                const observations = history.filter(h => h.field === 'observation').sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-                const edits = history.filter(h => h.field !== 'observation').sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-                return { cadenceHistory: cadence, observationHistory: observations, editHistory: edits };
-            }, [tasks, prospect]);
-            
-            const toggleSection = (section) => setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-            
-            const QuickActionButton = ({ type, color, children }) => { const isSelected = selectedActions.includes(type); return (<button onClick={() => handleActionToggle(type)} className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-all duration-200 border-2 ${isSelected ? `${color.selectedBg} ${color.selectedText} ${color.selectedBorder}` : `${color.bg} text-white hover:${color.hoverBg}`}`}>{children}</button>) };
-            const actionColors = { 'Ligação': { bg: 'bg-violet-500', hoverBg: 'bg-violet-600', selectedBg: 'bg-violet-100', selectedText: 'text-violet-700', selectedBorder: 'border-violet-500' }, 'Conexão': { bg: 'bg-green-500', hoverBg: 'bg-green-600', selectedBg: 'bg-green-100', selectedText: 'text-green-700', selectedBorder: 'border-green-500' }, 'Decisor': { bg: 'bg-orange-500', hoverBg: 'bg-orange-600', selectedBg: 'bg-orange-100', selectedText: 'text-orange-700', selectedBorder: 'border-orange-500' }, 'Reunião Marcada': { bg: 'bg-indigo-500', hoverBg: 'bg-indigo-600', selectedBg: 'bg-indigo-100', selectedText: 'text-indigo-700', selectedBorder: 'border-indigo-500' }, 'Reunião Realizada': { bg: 'bg-teal-500', hoverBg: 'bg-teal-600', selectedBg: 'bg-teal-100', selectedText: 'text-teal-700', selectedBorder: 'border-teal-500' }, 'Venda': { bg: 'bg-amber-400', hoverBg: 'bg-amber-500', selectedBg: 'bg-amber-100', selectedText: 'text-amber-700', selectedBorder: 'border-amber-500' }, };
-            
-            return (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                        <div className="p-4 border-b flex justify-between items-center"><h2 className="text-xl font-semibold text-brand-text-dark">{editedData.name}</h2><button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-3xl leading-none">&times;</button></div>
-                        <div className="flex-1 flex overflow-hidden">
-                            <div className="w-1/2 p-6 border-r overflow-y-auto custom-scrollbar">
-                                <div className="space-y-4">
-                                    <div><label className="block text-sm font-medium text-gray-700">Nome da Empresa</label><input type="text" name="name" value={editedData.name || ''} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
-                                    <div><label className="block text-sm font-medium text-gray-700">Nome do Contato</label><input type="text" name="contact_name" value={editedData.contact_name || ''} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
-                                    <div><label className="block text-sm font-medium text-gray-700">E-mail</label><input type="email" name="email" value={editedData.email || ''} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
-                                    <div><label className="block text-sm font-medium text-gray-700">Telefone</label><input type="tel" name="phone" value={editedData.phone || ''} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
-                                    <div><label className="block text-sm font-medium text-gray-700">Valor</label><input type="number" name="value" value={editedData.value || 0} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
-                                    <div><label className="block text-sm font-medium text-gray-700">Status</label><select name="status" value={editedData.status} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral">{KANBAN_STAGES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-                                    <div><label className="block text-sm font-medium text-gray-700">Responsável</label><select name="user_id" value={editedData.user_id} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral">{(users || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
-                                    
-                                    <div className="border rounded-md mt-4">
-                                        <div className="p-2 cursor-pointer flex justify-between items-center bg-gray-100" onClick={() => toggleSection('tags')}>
-                                            <h4 className="font-semibold text-gray-700">Tags</h4>
-                                            <span className={`transform transition-transform ${expandedSections.tags ? 'rotate-90' : ''}`}>{Icons.arrow}</span>
-                                        </div>
-                                        {expandedSections.tags && (
-                                            <div className="p-4">
-                                                <div className="flex flex-wrap gap-2 mb-4">
-                                                    {(allTags || []).map(tag => (
-                                                        <span key={tag.id} onClick={() => handleTagToggle(tag.name)}
-                                                            className={`text-xs font-semibold px-3 py-1 rounded-full cursor-pointer transition-all duration-200 ${ (editedData.tags || []).includes(tag.name) ? 'ring-2 ring-offset-1' : ''}`}
-                                                            style={{ backgroundColor: tag.color, color: 'white', ringColor: tag.color }}>
-                                                            {tag.name}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                                {profile?.role === 'admin' && (
-                                                    <div className="border-t pt-4 mt-4 space-y-2">
-                                                         <h5 className="text-sm font-semibold text-gray-600">Criar Nova Tag</h5>
-                                                         <input type="text" placeholder="Nome da tag" value={newTagName} onChange={e => setNewTagName(e.target.value)} className="block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" />
-                                                         <div className="flex items-center gap-2">
-                                                            <input type="color" value={newTagColor} onChange={e => setNewTagColor(e.target.value)} className="p-1 h-10 w-14 block bg-white border border-gray-300 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none" />
-                                                            <button onClick={handleCreateTag} className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 lowercase">Criar Tag</button>
-                                                         </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
+        
 
-                                    <div className="pt-2">
-                                        {!isDeleting ? (
-                                            <div className="flex gap-4">
-                                                <button onClick={() => setIsDeleting(true)} className="w-1/3 mt-2 px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-all lowercase flex items-center justify-center gap-2">{Icons.trash}Excluir</button>
-                                                <button onClick={handleSave} className="w-2/3 mt-2 px-4 py-2 bg-brand-coral text-white rounded-lg font-semibold hover:bg-brand-coral-dark shadow-sm hover:shadow-lg transition-all lowercase">Salvar Alterações</button>
-                                            </div>
-                                        ) : (
-                                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-center">
-                                                <strong className="font-bold">Tem certeza?</strong><p className="block sm:inline">Esta ação não pode ser desfeita.</p>
-                                                <div className="flex justify-center gap-4 mt-4">
-                                                    <button onClick={() => setIsDeleting(false)} className="px-4 py-2 bg-gray-300 text-black rounded-lg">Cancelar</button>
-                                                    <button onClick={() => onDelete(prospect.id)} className="px-4 py-2 bg-red-600 text-white rounded-lg">Confirmar Exclusão</button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="mt-6 pt-6 border-t">
-                                    <h3 className="text-lg font-semibold text-brand-text-dark flex items-center gap-2 mb-4">{Icons.calendar} Tarefas & Observações</h3>
-                                    <div className="space-y-3">
-                                        <textarea placeholder="Adicione uma nota..." value={newObservation} onChange={(e) => setNewObservation(e.target.value)} rows="3" className="block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral lowercase" />
-                                        <button onClick={handleAddObservationClick} disabled={!newObservation.trim()} className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400 lowercase">Adicionar Observação</button>
-                                    </div>
-                                    <div className="space-y-3 mt-4">
-                                        <input type="text" placeholder="descreva a próxima ação..." value={newTaskDesc} onChange={(e) => setNewTaskDesc(e.target.value)} className="block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral lowercase" />
-                                        <input type="datetime-local" value={newTaskDate} onChange={(e) => setNewTaskDate(e.target.value)} className="block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black" />
-                                        <button onClick={handleScheduleTask} disabled={!newTaskDesc || !newTaskDate} className="w-full px-4 py-2 bg-brand-coral/80 text-white rounded-lg font-semibold hover:bg-brand-coral disabled:bg-gray-400 lowercase">agendar tarefa</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="w-1/2 p-6 overflow-y-auto custom-scrollbar bg-white">
-                                <h3 className="text-lg font-semibold text-brand-text-dark mb-4">Histórico de Atividades</h3>
-                                <div className="space-y-2">
-                                    <div className="border rounded-md"><div className="p-2 cursor-pointer flex justify-between items-center bg-gray-100" onClick={() => toggleSection('cadencia')}><h4 className="font-semibold text-gray-700">Cadência</h4><span className={`transform transition-transform ${expandedSections.cadencia ? 'rotate-90' : ''}`}>{Icons.arrow}</span></div>{expandedSections.cadencia && <ul className="p-2 space-y-2">{cadenceHistory.map(item => <li className="text-sm" key={`cad-${item.id}`}>{item.description} - <span className="text-xs text-gray-400">{new Date(item.created_at).toLocaleString('pt-BR')}</span></li>)}</ul>}</div>
-                                    <div className="border rounded-md"><div className="p-2 cursor-pointer flex justify-between items-center bg-gray-100" onClick={() => toggleSection('observacoes')}><h4 className="font-semibold text-gray-700">Observações</h4><span className={`transform transition-transform ${expandedSections.observacoes ? 'rotate-90' : ''}`}>{Icons.arrow}</span></div>{expandedSections.observacoes && <ul className="p-2 space-y-2">{observationHistory.map((item, i) => <li className="text-sm" key={`obs-${i}`}>{item.content} <span className="text-xs text-gray-400">({new Date(item.timestamp).toLocaleString('pt-BR')})</span></li>)}</ul>}</div>
-                                    <div className="border rounded-md"><div className="p-2 cursor-pointer flex justify-between items-center bg-gray-100" onClick={() => toggleSection('alteracoes')}><h4 className="font-semibold text-gray-700">Alterações no Card</h4><span className={`transform transition-transform ${expandedSections.alteracoes ? 'rotate-90' : ''}`}>{Icons.arrow}</span></div>{expandedSections.alteracoes && <ul className="p-2 space-y-2">{editHistory.map((item, i) => <li className="text-sm" key={`edit-${i}`}>{`Campo '${CRM_FIELD_LABELS[item.field] || item.field}' alterado de '${item.oldValue}' para '${item.newValue}'`} <span className="text-xs text-gray-400">({new Date(item.timestamp).toLocaleString('pt-BR')})</span></li>)}</ul>}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="p-4 bg-gray-50 border-t"><h3 className="text-sm font-medium text-gray-600 mb-2 lowercase">ações rápidas (cadência inteligente)</h3><div className="flex flex-wrap gap-2 items-center"><QuickActionButton type="Ligação" color={actionColors['Ligação']}>Ligação</QuickActionButton><QuickActionButton type="Conexão" color={actionColors['Conexão']}>Conexão</QuickActionButton><QuickActionButton type="Decisor" color={actionColors['Decisor']}>Decisor</QuickActionButton><QuickActionButton type="Reunião Marcada" color={actionColors['Reunião Marcada']}>Reunião Marcada</QuickActionButton><QuickActionButton type="Reunião Realizada" color={actionColors['Reunião Realizada']}>Reunião Realizada</QuickActionButton><QuickActionButton type="Venda" color={actionColors['Venda']}>Venda</QuickActionButton><div className="flex-grow flex items-center justify-end gap-4"><span className="text-sm text-gray-600 font-medium">{selectedActions.length} ação(ões) = 1 cadência</span><button onClick={handleRegisterClick} className="px-4 py-2 bg-brand-coral text-white rounded-lg font-semibold hover:bg-brand-coral-dark disabled:bg-gray-400 lowercase" disabled={selectedActions.length === 0}>registar ações</button></div></div></div>
-                    </div>
-                </div>
-            );
-        }
-        
-        function AddProspectModal({ isOpen, onClose, onSave, users, currentUserId }) {
-            const initialData = { name: '', contact_name: '', value: 0, email: '', phone: '', status: 'Novo', user_id: currentUserId, observation: '', tags: [] };
-            const [formData, setFormData] = useState(initialData);
-            
-            useEffect(() => {
-                if (isOpen) setFormData({...initialData, user_id: currentUserId});
-            }, [isOpen, currentUserId]);
+        // --- 2. ÍCONES SVG ---
 
-            if (!isOpen) return null;
+        const Icons = {
 
-            const handleChange = (e) => {
-                const { name, value } = e.target;
-                setFormData(prev => ({ ...prev, [name]: name === 'value' ? parseFloat(value) || 0 : value }));
-            };
+            dashboard: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20V16"/></svg>,
 
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                onSave(formData, true);
-            };
+            kanban: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>,
 
-            return (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
-                        <div className="p-4 border-b flex justify-between items-center"><h2 className="text-xl font-semibold text-black">Novo Contato</h2><button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-3xl leading-none">&times;</button></div>
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            <div><label className="block text-sm font-medium text-gray-700">Nome da Empresa</label><input type="text" name="name" value={formData.name} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" required /></div>
-                            <div><label className="block text-sm font-medium text-gray-700">Nome do Contato</label><input type="text" name="contact_name" value={formData.contact_name} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
-                            <div><label className="block text-sm font-medium text-gray-700">E-mail</label><input type="email" name="email" value={formData.email} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
-                            <div><label className="block text-sm font-medium text-gray-700">Telefone</label><input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
-                            <div><label className="block text-sm font-medium text-gray-700">Valor da Proposta</label><input type="number" name="value" value={formData.value} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
-                            <div><label className="block text-sm font-medium text-gray-700">Observação</label><textarea name="observation" value={formData.observation} onChange={handleChange} rows="3" className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral"></textarea></div>
-                            <div className="flex justify-end gap-4 pt-4">
-                                <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold">Cancelar</button>
-                                <button type="submit" className="px-4 py-2 bg-brand-coral text-white rounded-lg font-semibold hover:bg-brand-coral-dark">Salvar Contato</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            );
-        }
+            list: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
 
-        function ImportModal({ isOpen, onClose, onImportSuccess }) {
-            const [step, setStep] = useState(1); const [fileHeaders, setFileHeaders] = useState([]); const [fileData, setFileData] = useState([]); const [mapping, setMapping] = useState({}); const [importReport, setImportReport] = useState(null);
-            const resetState = () => { setStep(1); setFileHeaders([]); setFileData([]); setMapping({}); setImportReport(null); };
-            const handleFileDrop = (e) => { e.preventDefault(); const file = e.dataTransfer.files[0]; processFile(file); };
-            const handleFileSelect = (e) => { const file = e.target.files[0]; processFile(file); };
-            const processFile = (file) => { if (!file) return; const reader = new FileReader(); reader.onload = (e) => { const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, { type: 'array' }); const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName]; const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); const headers = json[0] || []; const records = json.slice(1).map(row => { let record = {}; headers.forEach((header, i) => record[header] = row[i]); return record; }); setFileHeaders(headers); setFileData(records); autoMapColumns(headers); setStep(2); }; reader.readAsArrayBuffer(file); };
-            const autoMapColumns = (headers) => { const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/gi, ''); let newMapping = {}; headers.forEach(header => { const normalizedHeader = normalize(header); const match = CRM_FIELDS.find(field => normalize(CRM_FIELD_LABELS[field]).includes(normalizedHeader)); newMapping[header] = match || ''; }); setMapping(newMapping); };
-            const handleMappingChange = (header, crmField) => { setMapping(prev => ({...prev, [header]: crmField })); };
-            const handleConfirmImport = () => { onImportSuccess(fileData, mapping); setImportReport({ success: fileData.length, failed: 0, duplicates: 0 }); setStep(3); };
-            const handleClose = () => { resetState(); onClose(); };
-            return ( isOpen && (<div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"><div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl"><div className="p-4 border-b flex justify-between items-center"><h2 className="text-xl font-semibold text-black">importar contatos - passo {step}/3</h2><button onClick={handleClose} className="text-gray-400 hover:text-gray-600 text-3xl leading-none">&times;</button></div>
-                {step === 1 && (<div onDrop={handleFileDrop} onDragOver={(e) => e.preventDefault()} className="p-8 border-dashed border-2 border-gray-300 m-8 rounded-lg text-center">{Icons.upload}<p className="mt-2 text-sm text-gray-600">Arraste e solte o seu ficheiro .csv ou .xlsx aqui</p><p className="text-xs text-gray-500 mt-1">ou</p><label htmlFor="file-upload" className="cursor-pointer mt-2 inline-block bg-brand-coral text-white font-semibold py-2 px-4 rounded-lg hover:bg-brand-coral-dark lowercase">selecione um ficheiro</label><input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileSelect} accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" /><div className="mt-6 p-4 bg-gray-100 rounded-lg text-left"><p className="text-xs font-semibold text-gray-500 mb-2">sequência recomendada de colunas:</p><div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center text-xs"><span className="bg-slate-200 p-2 rounded truncate font-medium">Nome da Empresa</span><span className="bg-slate-200 p-2 rounded truncate font-medium">Nome do Contato</span><span className="bg-slate-200 p-2 rounded truncate font-medium">E-mail</span><span className="bg-slate-200 p-2 rounded truncate font-medium">Telefone</span><span className="bg-slate-200 p-2 rounded truncate font-medium">Valor</span></div></div></div>)}
-                {step === 2 && (<div className="p-8"><h3 className="font-semibold text-black mb-4">mapeie as colunas do seu ficheiro:</h3><div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar pr-4">{fileHeaders.map(header => (<div key={header} className="grid grid-cols-2 gap-4 items-center"><span className="font-medium text-gray-600 bg-gray-100 p-2 rounded-md truncate">{header}</span><select value={mapping[header] || ''} onChange={(e) => handleMappingChange(header, e.target.value)} className="block w-full border-gray-300 bg-white rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral"><option value="">ignorar esta coluna</option>{CRM_FIELDS.map(field => <option key={field} value={field}>{CRM_FIELD_LABELS[field]}</option>)}</select></div>))}</div><div className="mt-8 flex justify-end"><button onClick={handleConfirmImport} disabled={!Object.values(mapping).some(v => v === 'name' || v === 'contact_name')} className="px-6 py-2 bg-brand-coral text-white rounded-lg font-semibold hover:bg-brand-coral-dark disabled:bg-gray-400 lowercase">importar</button></div></div>)}
-                {step === 3 && (<div className="p-8 text-center"><h3 className="text-2xl font-bold text-green-600 mb-4">importação concluída!</h3><div className="space-y-2 text-lg text-gray-800"><p className="flex items-center justify-center text-green-600">{Icons.check} {importReport.success} contatos importados com sucesso.</p><p className="flex items-center justify-center text-red-500">{Icons.cross} {importReport.failed} contatos falharam.</p></div><button onClick={handleClose} className="mt-8 px-6 py-2 bg-brand-coral text-white rounded-lg font-semibold hover:bg-brand-coral-dark lowercase">fechar</button></div>)}
-            </div></div>) );
-        }
+            tasks: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
 
-        function KanbanView({ prospects, users, tasks, onStatusChange, onCardClick, handleDragStart, profile, selectedUserId, setSelectedUserId, allTags }) {
-            const handleDragOver = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over') };
-            const handleDragLeave = (e) => e.currentTarget.classList.remove('drag-over');
-            const handleDrop = (e, newStatus) => { 
-                e.preventDefault(); 
-                e.currentTarget.classList.remove('drag-over'); 
-                const prospectId = parseInt(e.dataTransfer.getData("prospectId"), 10);
-                if (!isNaN(prospectId)) {
-                    onStatusChange(prospectId, newStatus); 
-                }
-            };
-            const prospectsByStage = useMemo(() => { const grouped = {}; KANBAN_STAGES.forEach(stage => grouped[stage] = []); (prospects || []).forEach(p => { if (grouped[p.status]) grouped[p.status].push(p) }); return grouped; }, [prospects]);
-            return (
-                <div className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col">
-                    {profile?.role === 'admin' && (
-                        <div className="flex justify-end mb-4">
-                             <select onChange={(e) => setSelectedUserId(e.target.value)} value={selectedUserId} className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-coral">
-                                <option value="all">Todos os Usuários</option>
-                                {(users || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                            </select>
-                        </div>
-                    )}
-                    <div className="flex-1 overflow-x-auto custom-scrollbar"><div className="flex gap-6 min-w-max h-full">{KANBAN_STAGES.map(stage => (<div key={stage} className="bg-brand-base-white/60 rounded-xl w-80 flex-shrink-0 flex flex-col kanban-column border-2 border-transparent transition-colors" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={(e) => handleDrop(e, stage)}><div className={`p-4 border-b-2 ${stage === 'Venda' ? 'bg-green-100 text-green-800' : ''} ${stage === 'Perdido' || stage === 'No Show' ? 'bg-red-100 text-red-800' : ''}`}><h2 className="font-semibold text-brand-text-dark">{stage} <span className="text-sm font-medium text-gray-500">{(prospectsByStage[stage] || []).length}</span></h2></div><div className="p-2 h-full overflow-y-auto custom-scrollbar">{(prospectsByStage[stage] || []).map(prospect => { const contactCount = (tasks || []).filter(t => t.prospect_id === prospect.id && t.completed && t.type === 'Cadência').length; return <ProspectCard key={prospect.id} prospect={prospect} onCardClick={onCardClick} contactCount={contactCount} onDragStart={handleDragStart} allTags={allTags} />; })}</div></div>))}</div></div>
-                </div>
-            );
-        }
-        
-        function ListView({ prospects, users, tasks, onCardClick, onSelect, selectedIds, profile, selectedUserId, setSelectedUserId, allTags }) {
-            const [filter, setFilter] = useState(''); const [collapsedStages, setCollapsedStages] = useState({});
-            const toggleStage = (stage) => { setCollapsedStages(prev => ({ ...prev, [stage]: !prev[stage] })); };
-            const stageColors = { 'Novo': 'bg-gray-500', 'Contato Inicial': 'bg-blue-500', 'Contato com Decisor': 'bg-purple-500', 'Proposta Enviada': 'bg-orange-500', 'Venda': 'bg-green-500', 'Perdido': 'bg-red-500', 'No Show': 'bg-red-700', 'Reunião Agendada': 'bg-indigo-500' };
-            const filteredProspects = useMemo(() => (prospects || []).filter(p => p.name.toLowerCase().includes(filter.toLowerCase())), [prospects, filter]);
-            const prospectsByStage = useMemo(() => { const grouped = {}; KANBAN_STAGES.forEach(stage => grouped[stage] = []); filteredProspects.forEach(p => grouped[p.status]?.push(p)); return grouped; }, [filteredProspects]);
-            return (<div className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col">
-                <div className="flex justify-between items-center mb-6">
-                    <div className="relative flex-grow"><div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">{Icons.search}</div><input type="text" placeholder="Filtrar por nome do prospect..." value={filter} onChange={(e) => setFilter(e.target.value)} className="block w-full max-w-lg pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-brand-base-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-brand-coral focus:border-brand-coral sm:text-sm" /></div>
-                    {profile?.role === 'admin' && (
-                        <select onChange={(e) => setSelectedUserId(e.target.value)} value={selectedUserId} className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-coral">
-                            <option value="all">Todos os Usuários</option>
-                            {(users || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                        </select>
-                    )}
-                </div>
-                <div className="flex-1 overflow-y-auto custom-scrollbar pr-2"><div className="space-y-4">{KANBAN_STAGES.map(stage => { const prospectsInStage = prospectsByStage[stage]; const isCollapsed = collapsedStages[stage]; if(filter && prospectsInStage.length === 0) return null; return (<div key={stage} className="bg-brand-base-white rounded-lg shadow-sm"><div className="p-3 flex items-center justify-between cursor-pointer" onClick={() => toggleStage(stage)}><div className="flex items-center gap-3"><span className={`transform transition-transform duration-300 ${isCollapsed ? '' : 'rotate-90'}`}>{Icons.arrow}</span><span className={`px-3 py-1 text-xs font-bold text-white rounded-full ${stageColors[stage] || 'bg-gray-400'}`}>{stage}</span><span className="text-sm font-semibold text-gray-600">{prospectsInStage.length}</span></div></div>{!isCollapsed && (<div className="border-t border-gray-200">{prospectsInStage.length > 0 ? (<table className="min-w-full"><tbody className="divide-y divide-gray-200">{prospectsInStage.map(prospect => { const user = (users || []).find(u => u.id === prospect.user_id); const contactCount = (tasks || []).filter(t => t.prospect_id === prospect.id && t.completed && t.type === 'Cadência').length; return (<tr key={prospect.id} className="hover:bg-gray-50"><td className="px-4 py-3"><input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-brand-coral focus:ring-brand-coral" checked={selectedIds.includes(prospect.id)} onChange={() => onSelect(prospect.id)} /></td><td className="px-4 py-3 whitespace-nowrap cursor-pointer" onClick={() => onCardClick(prospect)}><div className="text-sm font-medium text-brand-text-dark">{prospect.name}</div><div className="text-sm text-gray-500">{prospect.contact_name}</div></td><td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{prospect.phone}</td><td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-600">{prospect.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td className="px-4 py-3 whitespace-nowrap text-sm text-brand-coral font-semibold">{contactCount} contatos</td><td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800"><span className="flex items-center" title={`Responsável: ${user?.name || 'Não encontrado'}`}><span className="text-lg mr-2">{user?.avatar || '👤'}</span>{user?.name || 'Não encontrado'}</span></td></tr>); })}</tbody></table>) : <p className="px-6 py-4 text-sm text-gray-500">Nenhum prospect nesta etapa.</p>}</div>)}</div>); })}</div></div></div>);
-        }
-        
-        function TasksView({ tasks, prospects, users, onTaskToggle, onCardClick, profile, selectedUserId, setSelectedUserId }) {
-            const [showCompleted, setShowCompleted] = useState(false);
+            contact: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 18a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2"/><rect x="3" y="4" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="2"/></svg>,
 
-            const { overdueTasks, todayTasks, upcomingTasks, completedTasks } = useMemo(() => {
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
+            phone: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
 
-                const userFilteredTasks = (profile?.role === 'admin' && selectedUserId !== 'all') 
-                    ? (tasks || []).filter(t => {
-                        const prospect = (prospects || []).find(p => p.id === t.prospect_id);
-                        return prospect && prospect.user_id === selectedUserId;
-                    })
-                    : (tasks || []);
+            money: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
 
-                const open = userFilteredTasks.filter(t => !t.completed && t.type !== 'Cadência');
-                
-                const overdue = open.filter(t => new Date(t.due_date) < today);
-                const forToday = open.filter(t => {
-                    const taskDate = new Date(t.due_date);
-                    return taskDate >= today && taskDate < tomorrow;
-                });
-                const upcoming = open.filter(t => new Date(t.due_date) >= tomorrow).sort((a,b) => new Date(a.due_date) - new Date(b.due_date));
-                const completed = userFilteredTasks.filter(t => t.completed).sort((a,b) => new Date(b.due_date) - new Date(a.due_date));
-                
-                return { overdueTasks: overdue, todayTasks: forToday, upcomingTasks: upcoming, completedTasks: completed };
-            }, [tasks, prospects, selectedUserId, profile]);
-            
-            const TaskItem = ({ task }) => {
-                const prospect = (prospects || []).find(p => p.id === task.prospect_id);
-                const user = (users || []).find(u => u.id === prospect?.user_id);
-                const isOverdue = new Date(task.due_date) < new Date() && !task.completed;
-                return (
-                    <div onClick={() => prospect && onCardClick(prospect)} className="bg-brand-base-white rounded-lg shadow-md p-4 flex items-center justify-between hover:shadow-lg transition-shadow cursor-pointer">
-                        <div className="flex items-center"><input type="checkbox" checked={task.completed} onClick={(e) => e.stopPropagation()} onChange={() => onTaskToggle(task.id, !task.completed)} className="h-5 w-5 rounded border-gray-300 text-brand-coral focus:ring-brand-coral"/><div className="ml-4"><p className="text-sm font-medium text-brand-text-dark">{task.description}</p><p className="text-sm text-gray-500">Para: <span className="font-semibold">{prospect?.name || 'Prospect não encontrado'}</span></p></div></div>
-                        <div className="flex items-center space-x-4"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${task.completed ? 'bg-gray-100 text-gray-800' : (isOverdue ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800')}`}>Vencimento: {new Date(task.due_date).toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'})}</span><span className="flex items-center text-gray-600" title={`Responsável: ${user?.name || 'Não encontrado'}`}><span className="text-lg">{user?.avatar || '👤'}</span></span></div>
-                    </div>
-                );
-            };
+            interactions: <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>,
 
-            return(<div className="flex-1 p-4 sm:p-6 lg:p-8 space-y-8 overflow-y-auto custom-scrollbar"><div className="flex justify-between items-center"><h1 className="text-3xl font-semibold text-brand-text-dark mb-6">minhas tarefas</h1>{profile?.role === 'admin' && ( <select onChange={(e) => setSelectedUserId(e.target.value)} value={selectedUserId} className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-coral"><option value="all">Todos os Usuários</option>{(users || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select> )}</div>
-            {overdueTasks.length > 0 && <div className="space-y-4"><h2 className="text-xl font-bold text-red-600">Atrasadas</h2>{overdueTasks.map(task => <TaskItem key={task.id} task={task}/>)}</div>}
-            {todayTasks.length > 0 && <div className="space-y-4"><h2 className="text-xl font-bold text-blue-600">Para Hoje</h2>{todayTasks.map(task => <TaskItem key={task.id} task={task}/>)}</div>}
-            {upcomingTasks.length > 0 && <div className="space-y-4"><h2 className="text-xl font-bold text-gray-700">Próximas</h2>{upcomingTasks.map(task => <TaskItem key={task.id} task={task}/>)}</div>}
-            <div className="bg-brand-base-white rounded-lg shadow-sm"><div className="p-3 flex items-center justify-between cursor-pointer" onClick={() => setShowCompleted(prev => !prev)}><div className="flex items-center gap-3"><span className={`transform transition-transform duration-300 ${showCompleted ? 'rotate-90' : ''}`}>{Icons.arrow}</span><h2 className="text-lg font-semibold text-gray-600">Histórico de Tarefas Concluídas</h2></div></div>{showCompleted && (<div className="border-t border-gray-200 p-4 space-y-4">{completedTasks.length > 0 ? completedTasks.map(task => <TaskItem key={task.id} task={task}/>) : <p className="text-gray-500">Nenhuma tarefa concluída ainda.</p>}</div>)}</div>
-            </div>);
-        }
-        
-        function DashboardView({ prospects, users, tasks, profile, selectedUserId, setSelectedUserId }) {
-            const [period, setPeriod] = useState('last7days');
-            const [customStartDate, setCustomStartDate] = useState('');
-            const [customEndDate, setCustomEndDate] = useState('');
-            const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-            const dropdownRef = useRef(null);
+            upload: <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-4-4V7a4 4 0 014-4h1.586A2 2 0 0114.172 4.414l.707.707A2 2 0 0016.586 6H17a4 4 0 014 4v5a4 4 0 01-4 4H7z M12 12a3 3 0 100-6 3 3 0 000 6z" /></svg>,
 
-            useEffect(() => {
-                const handleClickOutside = (event) => {
-                    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                        setIsDropdownOpen(false);
-                    }
-                };
-                document.addEventListener("mousedown", handleClickOutside);
-                return () => document.removeEventListener("mousedown", handleClickOutside);
-            }, [dropdownRef]);
-            
-            const { filteredProspects, filteredTasks } = useMemo(() => {
-                let start, end;
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
+            check: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>,
 
-                switch (period) {
-                    case 'today': start = new Date(today); end = new Date(today); end.setHours(23, 59, 59, 999); break;
-                    case 'yesterday': start = new Date(today); start.setDate(today.getDate() - 1); end = new Date(start); end.setHours(23, 59, 59, 999); break;
-                    case 'thisMonth': start = new Date(today.getFullYear(), today.getMonth(), 1); end = new Date(today.getFullYear(), today.getMonth() + 1, 0); end.setHours(23, 59, 59, 999); break;
-                    case 'last7days': start = new Date(today); start.setDate(today.getDate() - 6); end = new Date(); end.setHours(23, 59, 59, 999); break;
-                    case 'custom': if(customStartDate && customEndDate) { start = new Date(customStartDate); end = new Date(customEndDate); end.setHours(23, 59, 59, 999); } else { return { filteredProspects: [], filteredTasks: [] }; } break;
-                    case 'all': default: break;
-                }
-                
-                let timeFilteredProspects = (start && end) ? (prospects || []).filter(p => { const pDate = new Date(p.created_at); return pDate >= start && pDate <= end; }) : prospects;
-                let timeFilteredTasks = (start && end) ? (tasks || []).filter(t => { const tDate = new Date(t.created_at); return tDate >= start && tDate <= end; }) : tasks;
-                
-                if (profile?.role === 'admin' && selectedUserId === 'all') {
-                    return { filteredProspects: timeFilteredProspects, filteredTasks: timeFilteredTasks };
-                }
-                
-                const finalProspects = (profile?.role === 'admin' && selectedUserId !== 'all') ? timeFilteredProspects.filter(p => p.user_id === selectedUserId) : timeFilteredProspects.filter(p => p.user_id === profile?.id);
-                const finalTasks = (profile?.role === 'admin' && selectedUserId !== 'all') ? timeFilteredTasks.filter(t => { const p = prospects.find(pr => pr.id === t.prospect_id); return p && p.user_id === selectedUserId; }) : timeFilteredTasks.filter(t => { const p = prospects.find(pr => pr.id === t.prospect_id); return p && p.user_id === profile?.id; });
+            cross: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>,
 
-                return {
-                    filteredProspects: finalProspects,
-                    filteredTasks: finalTasks
-                };
+            edit: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" /></svg>,
 
-            }, [period, customStartDate, customEndDate, prospects, tasks, selectedUserId, profile]);
+            taskLog: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>,
 
-            const periodLabels = { 'today': 'Hoje', 'yesterday': 'Ontem', 'last7days': 'Últimos 7 dias', 'thisMonth': 'Este Mês', 'all': 'Máximo', 'custom': 'Personalizado' };
-            const handlePeriodChange = (newPeriod) => { setPeriod(newPeriod); if (newPeriod !== 'custom') { setIsDropdownOpen(false); } };
-            
-            const ActivityKpiCard = ({ title, value, icon, iconBgColor }) => ( <div className="bg-brand-base-white p-5 rounded-lg shadow-md flex items-center justify-between"><div><h3 className="text-sm font-medium text-gray-500">{title}</h3><p className="mt-1 text-3xl font-semibold text-brand-text-dark">{value}</p></div><div className={`p-3 rounded-full ${iconBgColor}`}>{icon}</div></div> );
-            const RankingPodium = ({ leaderboard }) => { const topThree = leaderboard.slice(0, 3); const podiumOrder = [1, 0, 2]; const podiumStyles = {0: { bgColor: 'bg-brand-coral', height: 'h-40', rank: '1º' }, 1: { bgColor: 'bg-brand-dark-blue', height: 'h-32', rank: '2º' }, 2: { bgColor: 'bg-brand-dark-blue/70', height: 'h-24', rank: '3º' },}; while(topThree.length < 3) { topThree.push({ id: `placeholder-${topThree.length}`, name: 'Vazio', avatar: '👤', score: 0 });} return (<div className="bg-brand-base-white p-6 rounded-lg shadow-md"><h3 className="text-lg font-semibold text-brand-text-dark mb-4">Pódio de Ligações</h3><div className="flex items-end justify-center gap-4 text-center h-52">{podiumOrder.map(index => { const user = topThree[index]; const style = podiumStyles[index]; if (!user) return null; return (<div key={user.id} className="flex flex-col items-center w-28"><span className="text-4xl mb-2">{user.avatar}</span><p className="font-bold text-brand-text-dark truncate w-full">{user.name}</p><div className={`flex items-center justify-center rounded-t-lg w-full ${style.bgColor} ${style.height}`}><div className="text-white font-black text-4xl" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>{style.rank}</div></div><div className="bg-brand-text-dark w-full p-2 rounded-b-lg text-white font-semibold text-sm">{user.score} ligações</div></div>);})}</div></div>);};
-            
-            const closedWonValue = useMemo(() => filteredProspects.filter(p => p.status === 'Venda').reduce((sum, p) => sum + p.value, 0), [filteredProspects]);
-            const activityKpiData = useMemo(() => { const cadenceTasks = filteredTasks.filter(t => t.type === 'Cadência'); let ligacoes = 0, conexoes = 0, contatoDecisor = 0, reunioes = 0, reunioesRealizadas = 0; cadenceTasks.forEach(task => { if (task.description.includes('Ligação')) ligacoes++; if (task.description.includes('Conexão')) conexoes++; if (task.description.includes('Decisor')) contatoDecisor++; if (task.description.includes('Reunião Marcada')) reunioes++; if (task.description.includes('Reunião Realizada')) reunioesRealizadas++; }); return { ligacoes, conexoes, contatoDecisor, reunioes, reunioesRealizadas, vendas: filteredProspects.filter(p => p.status === 'Venda').length } }, [filteredTasks, filteredProspects]);
-            const funnelData = useMemo(() => { const d = {}; KANBAN_STAGES.forEach(s => d[s] = filteredProspects.filter(p => p.status === s).length); return d; }, [filteredProspects]);
-            
-            const leaderboardData = useMemo(() => (users || []).map(user => { const callTasks = (tasks || []).filter(t => { const p = prospects.find(pr => pr.id === t.prospect_id); return p && p.user_id === user.id && t.description.includes('Ligação'); }); return { ...user, score: callTasks.length }; }).sort((a, b) => b.score - a.score), [tasks, users, prospects]);
-            const salesLeaderboardData = useMemo(() => (users || []).map(user => { const userSales = filteredProspects.filter(p => p.user_id === user.id && p.status === 'Venda'); return { ...user, salesCount: userSales.length, totalValue: userSales.reduce((s, p) => s + p.value, 0) }; }).sort((a, b) => b.totalValue - a.totalValue), [filteredProspects, users]);
+            search: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>,
 
-            return (<div className="flex-1 p-4 sm:p-6 lg:p-8 space-y-8 custom-scrollbar overflow-y-auto">
-                <div className="flex justify-between items-center">
-                    <div><h1 className="text-3xl font-semibold text-brand-text-dark lowercase">dashboard</h1><p className="text-gray-500">visão geral das suas métricas de prospecção</p></div>
-                    <div className="flex items-center space-x-4">
-                        {profile?.role === 'admin' && (
-                            <select onChange={(e) => setSelectedUserId(e.target.value)} value={selectedUserId} className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-coral">
-                                <option value="all">Todos os Usuários</option>
-                                {(users || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                            </select>
-                        )}
-                        <div className="relative" ref={dropdownRef}>
-                            <button onClick={() => setIsDropdownOpen(prev => !prev)} className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm">
-                                <span className="font-semibold text-brand-text-dark">{periodLabels[period]}</span>
-                                <span className={`transform transition-transform duration-300 ${isDropdownOpen ? 'rotate-90' : ''}`}>{Icons.arrow}</span>
-                            </button>
-                            {isDropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl z-10 p-4">
-                                    <ul className="space-y-1 mb-4">
-                                        <li><button onClick={() => handlePeriodChange('today')} className="w-full text-left px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100">Hoje</button></li>
-                                        <li><button onClick={() => handlePeriodChange('yesterday')} className="w-full text-left px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100">Ontem</button></li>
-                                        <li><button onClick={() => handlePeriodChange('thisMonth')} className="w-full text-left px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100">Este Mês</button></li>
-                                        <li><button onClick={() => handlePeriodChange('last7days')} className="w-full text-left px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100">Últimos 7 dias</button></li>
-                                        <li><button onClick={() => handlePeriodChange('all')} className="w-full text-left px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100">Máximo</button></li>
-                                    </ul>
-                                    <div className="border-t pt-4">
-                                        <p className="text-sm font-semibold mb-2">Período Personalizado</p>
-                                        <div className="space-y-2 text-sm">
-                                            <input type="date" value={customStartDate} onChange={e => {setPeriod('custom'); setCustomStartDate(e.target.value)}} className="p-2 border rounded-md w-full"/>
-                                            <input type="date" value={customEndDate} onChange={e => {setPeriod('custom'); setCustomEndDate(e.target.value)}} className="p-2 border rounded-md w-full"/>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><ActivityKpiCard title="ligações" value={activityKpiData.ligacoes} iconBgColor="bg-blue-100" icon={<svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>} /><ActivityKpiCard title="conexões" value={activityKpiData.conexoes} iconBgColor="bg-green-100" icon={<svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>} /><ActivityKpiCard title="contato decisor" value={activityKpiData.contatoDecisor} iconBgColor="bg-purple-100" icon={<svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>} /><ActivityKpiCard title="reuniões" value={activityKpiData.reunioes} iconBgColor="bg-orange-100" icon={<svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} /></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><ActivityKpiCard title="reuniões realizadas" value={activityKpiData.reunioesRealizadas} iconBgColor="bg-teal-100" icon={Icons.check} /><ActivityKpiCard title="vendas" value={activityKpiData.vendas} iconBgColor="bg-lime-100" icon={Icons.money} /><ActivityKpiCard title="valor vendido" value={closedWonValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} iconBgColor="bg-emerald-100" icon={Icons.money} /></div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8"><div className="bg-brand-base-white p-6 rounded-lg shadow-md"><h3 className="text-lg font-semibold text-brand-text-dark mb-4">Funil de Vendas</h3><div className="space-y-3">{Object.entries(funnelData).map(([stage, count]) => (<div key={stage}><div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">{stage}</span><span className="font-bold text-brand-text-dark">{count}</span></div><div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-gradient-to-r from-brand-coral to-pink-400 h-2.5 rounded-full" style={{ width: `${(filteredProspects.length > 0 ? (count / filteredProspects.length) * 100 : 0)}%` }}></div></div></div>))}</div></div><div className="bg-brand-base-white p-6 rounded-lg shadow-md"><h3 className="text-lg font-semibold text-brand-text-dark mb-4">Ranking de Vendas</h3><ul className="space-y-4">{salesLeaderboardData.slice(0,5).map((u, index) => (<li key={u.id} className="flex items-center space-x-4 p-2 rounded-lg hover:bg-gray-50"><span className="text-lg font-bold text-gray-400 w-5">#{index+1}</span><span className="text-4xl">{u.avatar}</span><div className="flex-1"><p className="font-bold text-brand-text-dark">{u.name}</p><p className="text-sm text-gray-500">{u.salesCount} vendas</p></div><p className="text-lg font-semibold text-green-600">{u.totalValue.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</p></li>))}</ul></div></div>
-                <RankingPodium leaderboard={leaderboardData} />
-            </div>);
-        }
+            arrow: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>,
 
-        function App() {
-            // Estados
-            const [user, setUser] = useState(null);
-            const [profile, setProfile] = useState(null);
-            const [isLoading, setIsLoading] = useState(true);
-            const [email, setEmail] = useState("");
-            const [password, setPassword] = useState("");
-            const [prospects, setProspects] = useState([]);
-            const [tasks, setTasks] = useState([]);
-            const [users, setUsers] = useState([]);
-            const [allTags, setAllTags] = useState([]);
-            const [view, setView] = useState('dashboard');
-            const [showConfetti, setShowConfetti] = useState(false);
-            const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-            const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-            const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-            const [selectedProspect, setSelectedProspect] = useState(null);
-            const [selectedIds, setSelectedIds] = useState([]);
-            const [selectedUserId, setSelectedUserId] = useState('all');
-            const { addToast } = useToast();
+            calendar: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
 
-            useEffect(() => {
-                const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-                    const currentUser = session?.user;
-                    setUser(currentUser);
-                    if (currentUser) {
-                        await fetchInitialData(currentUser.id);
-                    }
-                    setIsLoading(false);
-                });
-            
-                return () => {
-                    authListener.subscription.unsubscribe();
-                };
-            }, []);
+            filter: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" /></svg>,
 
-            const fetchInitialData = async (currentUserId) => {
-                setIsLoading(true);
-                await Promise.all([
-                    fetchProspects(), 
-                    fetchTasks(), 
-                    fetchProfiles(currentUserId), 
-                    fetchTags()
-                ]);
-                setIsLoading(false);
-            };
+            trash: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
 
-            const fetchProspects = async () => { const { data, error } = await supabase.from('CRM DADOS').select('*').order('created_at'); if (error) console.error("Erro ao buscar prospects:", error.message); else setProspects(data || []); };
-            const fetchTasks = async () => { const { data, error } = await supabase.from('tasks').select('*'); if (error) console.error("Erro ao buscar tarefas:", error.message); else setTasks(data || []); };
-            const fetchProfiles = async (currentUserId) => { const { data, error } = await supabase.from('profiles').select('*'); if (error) console.error("Erro ao buscar perfis:", error.message); else { setUsers(data || []); const currentUserProfile = (data || []).find(p => p.id === currentUserId); setProfile(currentUserProfile); if(currentUserProfile && currentUserProfile.role !== 'admin') { setSelectedUserId(currentUserId); } else { setSelectedUserId('all'); } } };
-            const fetchTags = async () => { const { data, error } = await supabase.from('tags').select('*'); if (error) console.error("Erro ao buscar tags:", error.message); else setAllTags(data || []); };
+        };
 
-            const handleLogin = async (e) => { e.preventDefault(); try { const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) { throw error; } addToast('Login bem-sucedido!', 'success'); } catch (error) { addToast(error.message, 'error'); } };
-            const handleLogout = async () => { await supabase.auth.signOut(); addToast('Você saiu da sua conta.'); };
-            const handleCardClick = (prospect) => { setSelectedProspect(prospect); setIsEditModalOpen(true); };
-            const handleNewProspectClick = () => { setIsAddModalOpen(true); };
-            const handleCloseModals = () => { setIsAddModalOpen(false); setIsEditModalOpen(false); setSelectedProspect(null); };
-            const triggerCelebration = () => { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 4000); };
-            const handleSelectProspect = (id) => { setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); };
 
-            const handleStatusChange = async (prospectId, newStatus) => { 
-                const prospect = prospects.find(p => p.id === prospectId);
-                if (!prospect) return;
-                
-                const originalStatus = prospect.status;
-                
-                if (newStatus === 'Venda' && originalStatus !== 'Proposta Enviada') {
-                    addToast('Ação bloqueada: Mova para "Proposta Enviada" primeiro.', 'error'); return;
-                }
-                
-                if (originalStatus !== 'Venda' && newStatus === 'Venda') triggerCelebration();
-                
-                const { error } = await supabase.from('CRM DADOS').update({ status: newStatus }).eq('id', prospectId);
-                if (error) { 
-                    addToast("Erro ao atualizar o status.", 'error'); 
-                } else { 
-                    addToast(`Prospect movido para ${newStatus}.`, 'success'); 
-                    await fetchProspects();
-                }
-            };
 
-            const handleSaveProspect = async (savedProspect, shouldClose = true) => {
-                const isCreating = !savedProspect.id;
-                
-                if (isCreating) {
-                    const { data, error } = await supabase.from('CRM DADOS').insert({ ...savedProspect, user_id: user.id }).select().single();
-                    if (error) {
-                        addToast("Erro ao criar prospect: " + error.message, 'error');
-                        return;
-                    }
-                    addToast('Prospect criado com sucesso!', 'success');
-                } else {
-                    const { data, error } = await supabase.from('CRM DADOS').update(savedProspect).eq('id', savedProspect.id).select().single();
-                    if(error) {
-                         addToast("Erro ao salvar prospect: " + error.message, 'error');
-                         return;
-                    }
-                    if (!shouldClose) setSelectedProspect(data);
-                    addToast("Alterações salvas com sucesso!", 'success');
-                }
-                
-                await fetchProspects();
-            
-                if (!isCreating && savedProspect.status === 'Venda') {
-                    const originalProspect = prospects.find(p => p.id === savedProspect.id);
-                    if(originalProspect?.status !== 'Venda') triggerCelebration();
-                }
-            
-                if (shouldClose) handleCloseModals();
-            };
+        // --- 3. COMPONENTES DE UI ---
 
-            const handleRegisterCadence = async (prospect, actions) => { 
-                if (actions.includes('Venda')) {
-                    if (prospect.status !== 'Proposta Enviada') {
-                        addToast('Ação bloqueada: Mova para "Proposta Enviada" primeiro.', 'error'); return;
-                    }
-                    await handleStatusChange(prospect.id, 'Venda');
-                }
-                const newTask = { prospect_id: prospect.id, user_id: user.id, description: `Cadência: ${actions.join(', ')}`, due_date: new Date().toISOString().split('T')[0], completed: true, type: 'Cadência' }; 
-                const { error } = await supabase.from('tasks').insert(newTask);
-                if (error) { addToast("Erro ao registrar cadência: " + error.message, 'error'); }
-                else { 
-                    addToast(`Cadência registrada para ${prospect.name}!`, 'success'); 
-                    await fetchTasks();
-                }
-            };
 
-            const handleTaskToggle = async (taskId, newStatus) => {
-                const { error } = await supabase.from('tasks').update({ completed: newStatus }).eq('id', taskId);
-                if (error) { 
-                    addToast("Erro ao atualizar tarefa.", 'error'); 
-                } else {
-                    await fetchTasks();
-                }
-            };
-            
-            const handleAddTask = async (prospect, description, dueDate) => { 
-                const newTask = { prospect_id: prospect.id, user_id: user.id, description, due_date: dueDate, completed: false, type: 'Follow-up' }; 
-                const { error } = await supabase.from('tasks').insert(newTask);
-                if(error) { addToast(`Erro ao agendar tarefa: ${error.message}`, 'error'); }
-                else { 
-                    addToast(`Tarefa agendada para ${prospect.name}.`, 'success'); 
-                    await fetchTasks();
-                }
-            };
 
-            const handleDragStart = (e, prospectId) => e.dataTransfer.setData("prospectId", prospectId);
-            
-            const handleImportSuccess = async (data, mapping) => {
-                const existingEmails = prospects.map(p => p.email).filter(Boolean);
-                const newProspectsData = data.map(record => {
-                    let newProspect = { user_id: user.id, edit_history: [], status: 'Novo' };
-                    for (const header in mapping) {
-                        const crmField = mapping[header];
-                        if (crmField) { newProspect[crmField] = record[header]; }
-                    }
-                    return newProspect;
-                }).filter(p => p.email && !existingEmails.includes(p.email));
+        function Confetti() {
 
-                if (newProspectsData.length > 0) {
-                    const { error } = await supabase.from('CRM DADOS').insert(newProspectsData);
-                    if (error) {
-                        addToast("Erro ao importar contatos: " + error.message, 'error');
-                    } else {
-                        addToast(`${newProspectsData.length} contatos importados com sucesso!`, 'success');
-                        await fetchProspects();
-                    }
-                } else {
-                    addToast("Nenhum contato novo para importar (podem ser duplicados).", 'info');
-                }
-            };
-            
-            const handleDeleteProspect = async (prospectId) => {
-                const { error } = await supabase.from('CRM DADOS').delete().eq('id', prospectId);
-                if (error) {
-                    addToast("Erro ao excluir prospect: " + error.message, 'error');
-                } else {
-                    addToast("Prospect excluído com sucesso.", 'success');
-                    await fetchProspects();
-                    handleCloseModals();
-                }
-            };
+            const confettiCount = 150;
 
-            const handleAddObservation = async (prospect, observationText) => {
-                const newObservation = {
-                    field: 'observation',
-                    content: observationText,
-                    timestamp: new Date().toISOString(),
-                    user_id: user.id
-                };
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722'];
 
-                const currentHistory = prospect.edit_history || [];
-                const updatedHistory = [...currentHistory, newObservation];
+            const particles = useMemo(() => Array.from({ length: confettiCount }).map((_, i) => ({ id: i, color: colors[Math.floor(Math.random() * colors.length)], left: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 4}s`, duration: `${2 + Math.random() * 2}s`, transform: `rotate(${Math.random() * 360}deg)` })), []);
 
-                const { data, error } = await supabase.from('CRM DADOS').update({ edit_history: updatedHistory }).eq('id', prospect.id).select().single();
+            return (<div className="confetti-container">{particles.map(p => (<div key={p.id} className="confetti" style={{ backgroundColor: p.color, left: p.left, animationDuration: p.duration, animationDelay: p.animationDelay, transform: p.transform }}/>))}</div>);
 
-                if (error) {
-                    addToast("Erro ao salvar observação: " + error.message, 'error');
-                } else {
-                    await fetchProspects();
-                    setSelectedProspect(data);
-                    addToast("Observação adicionada.", 'success');
-                }
-            };
+        }
 
-            const handleCreateTag = async (tagName, tagColor) => {
-                if (!tagName.trim()) return;
-                const { error } = await supabase.from('tags').insert([{ name: tagName, color: tagColor }]).select().single();
-                if (error) {
-                    addToast("Erro ao criar tag: " + error.message, 'error');
-                } else {
-                    addToast(`Tag "${tagName}" criada com sucesso!`, 'success');
-                    await fetchTags();
-                }
-            };
-            
-            const filteredData = useMemo(() => {
-                if (!profile) return []; 
 
-                if (profile.role === 'admin' && selectedUserId !== 'all') {
-                    return prospects.filter(p => p.user_id === selectedUserId);
-                }
-                if (profile.role !== 'admin') {
-                    return prospects.filter(p => p.user_id === profile.id);
-                }
-                return prospects;
-            }, [prospects, selectedUserId, profile]);
-            
-            const filteredTasksForViews = useMemo(() => {
-                if (!profile) return [];
 
-                if (profile.role === 'admin' && selectedUserId !== 'all') {
-                    return tasks.filter(t => {
-                        const prospect = prospects.find(p => p.id === t.prospect_id);
-                        return prospect?.user_id === selectedUserId;
-                    });
-                }
-                if (profile.role !== 'admin') {
-                    return tasks.filter(t => {
-                        const prospect = prospects.find(p => p.id === t.prospect_id);
-                        return prospect?.user_id === profile.id;
-                    });
-                }
-                return tasks;
-            }, [tasks, prospects, selectedUserId, profile]);
-            
-            const renderView = () => {
-                const props = { prospects: filteredData, users, tasks: filteredTasksForViews, onCardClick: handleCardClick, handleDragStart, onStatusChange: handleStatusChange, onSelect: handleSelectProspect, selectedIds, onTaskToggle: handleTaskToggle, profile, selectedUserId, setSelectedUserId, allTags };
-                switch (view) {
-                    case 'kanban': return <KanbanView {...props} />;
-                    case 'list': return <ListView {...props} />;
-                    case 'tasks': return <TasksView {...props} />;
-                    case 'dashboard': default: return <DashboardView {...props} />;
-                }
-            };
-            
-            const NavButton = ({ viewName, icon, children }) => ( <button onClick={() => setView(viewName)} className={`flex items-center space-x-2 px-4 py-2 rounded-lg border-2 transition-colors duration-200 text-sm font-semibold ${view === viewName ? 'bg-brand-logo-coral border-brand-logo-coral text-white' : 'bg-brand-header-blue border-white text-white hover:bg-white hover:text-brand-header-blue'}`}>{icon}<span className="lowercase">{children}</span></button> );
+        function ProspectCard({ prospect, onDragStart, onCardClick, contactCount, allTags }) {
 
-            if (isLoading) return <div className="loading-container text-2xl font-semibold">Carregando...</div>;
-            
-            if (!user) {
-                return (
-                    <div className="login-container">
-                        <form onSubmit={handleLogin} className="p-8 bg-white rounded-lg shadow-xl w-full max-w-sm space-y-4">
-                            <h2 className="text-2xl font-bold text-center text-gray-800">NG PROSPECT</h2>
-                            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" required className="w-full p-3 border rounded text-gray-800" />
-                            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Senha" required className="w-full p-3 border rounded text-gray-800" />
-                            <button type="submit" className="w-full p-3 bg-brand-coral text-white rounded font-bold hover:bg-brand-coral-dark">Entrar</button>
-                        </form>
-                    </div>
-                );
-            }
+            const getTagColor = (tagName) => {
 
-            return (
-                <Fragment>
-                    {showConfetti && <Confetti />}
-                    <AddProspectModal isOpen={isAddModalOpen} onClose={handleCloseModals} onSave={handleSaveProspect} users={users} currentUserId={user.id} />
-                    <EditProspectModal isOpen={isEditModalOpen} onClose={handleCloseModals} prospect={selectedProspect} users={users} tasks={tasks} onSave={handleSaveProspect} onRegisterCadence={handleRegisterCadence} onAddTask={handleAddTask} onDelete={handleDeleteProspect} onAddObservation={handleAddObservation} allTags={allTags} onCreateTag={handleCreateTag} profile={profile} />
-                    <ImportModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onImportSuccess={handleImportSuccess} />
-                    <div className="h-screen w-screen flex flex-col bg-slate-100">
-                        <header className="bg-brand-header-blue p-4 flex justify-between items-center flex-shrink-0">
-                            <h1 className="text-xl font-bold text-brand-logo-coral uppercase tracking-wider">NG Prospect</h1>
-                            <nav className="flex items-center space-x-2">
-                               <NavButton viewName="dashboard" icon={Icons.dashboard}>dashboard</NavButton>
-                               <NavButton viewName="kanban" icon={Icons.kanban}>kanban</NavButton>
-                               <NavButton viewName="list" icon={Icons.list}>lista</NavButton>
-                               <NavButton viewName="tasks" icon={Icons.tasks}>tarefas</NavButton>
-                            </nav>
-                            <div className="flex items-center space-x-4">
-                                <button onClick={handleNewProspectClick} className="px-4 py-2 bg-brand-logo-coral text-white rounded-lg font-semibold hover:bg-opacity-90 shadow-sm hover:shadow-lg transition-all lowercase">novo contato</button>
-                                <button onClick={() => setIsImportModalOpen(true)} className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg font-semibold hover:bg-white/20 transition-all lowercase">importar</button>
-                                <button onClick={handleLogout} className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg font-semibold hover:bg-white/20 transition-all lowercase">Sair</button>
-                                <span className="text-3xl" title={profile?.name || user.email}>{profile?.avatar || '👤'}</span>
-                            </div>
-                        </header>
-                        <main className="flex-1 overflow-y-auto">{renderView()}</main>
-                    </div>
-                </Fragment>
-            );
-        }
-        
-        // --- Ponto de Entrada do React ---
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(
-            <ToastProvider>
-                <App />
-            </ToastProvider>
-        );
+                const tag = allTags.find(t => t.name === tagName);
 
-    </script>
+                return tag ? tag.color : '#A0AEC0'; // Cor padrão cinza
+
+            };
+
+
+
+            return (
+
+                <div draggable="true" onDragStart={(e) => { onDragStart(e, prospect.id); e.currentTarget.classList.add('dragging'); }} onDragEnd={(e) => e.currentTarget.classList.remove('dragging')} onClick={() => onCardClick(prospect)}
+
+                    className="bg-white rounded-lg shadow-md p-4 mb-4 border-l-4 border-brand-coral hover:shadow-xl transition-all duration-200 cursor-pointer prospect-card" >
+
+                    <h3 className="font-semibold text-brand-text-dark truncate">{prospect.name}</h3>
+
+                    <div className="text-sm text-gray-500 mt-2 space-y-1.5">
+
+                        <p className="flex items-center text-brand-coral"><span className="mr-2">{Icons.contact}</span>{prospect.contact_name}</p>
+
+                        <p className="flex items-center font-medium text-gray-600"><span className="mr-2 text-brand-coral">{Icons.phone}</span>{prospect.phone}</p>
+
+                        <p className="flex items-center"><span className="mr-2 text-brand-coral">{Icons.money}</span>{(prospect.value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+
+                        <p className="flex items-center font-semibold"><span className="mr-2 text-brand-coral">{Icons.interactions}</span>{contactCount} contatos</p>
+
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-1">
+
+                        {(prospect.tags || []).map(tag => (
+
+                            <span key={tag} className="text-xs font-semibold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: getTagColor(tag) }}>
+
+                                {tag}
+
+                            </span>
+
+                        ))}
+
+                    </div>
+
+                </div>
+
+            );
+
+        }
+
+
+
+        function EditProspectModal({ isOpen, onClose, prospect, users, tasks, onSave, onRegisterCadence, onAddTask, onDelete, onAddObservation, allTags, onCreateTag }) {
+
+            if (!isOpen || !prospect) return null;
+
+            const [editedData, setEditedData] = useState(prospect);
+
+            const [selectedActions, setSelectedActions] = useState([]);
+
+            const [newTaskDesc, setNewTaskDesc] = useState('');
+
+            const [newTaskDate, setNewTaskDate] = useState('');
+
+            const [newObservation, setNewObservation] = useState('');
+
+            const [isDeleting, setIsDeleting] = useState(false);
+
+            const [newTagName, setNewTagName] = useState('');
+
+            const [newTagColor, setNewTagColor] = useState('#4299e1');
+
+            const [expandedSections, setExpandedSections] = useState({ cadencia: true, observacoes: true, alteracoes: true, tags: true });
+
+            
+
+            useEffect(() => { setEditedData(prospect); setSelectedActions([]); setNewTaskDesc(''); setNewTaskDate(''); setIsDeleting(false); setNewObservation(''); }, [prospect]);
+
+            
+
+            const handleChange = (e) => { const { name, value } = e.target; setEditedData(prev => ({...prev, [name]: name === 'value' ? parseFloat(value) || 0 : value })); };
+
+            const handleSave = () => { if (onSave(editedData, false)) { alert("Alterações salvas com sucesso!"); } };
+
+            const handleActionToggle = (actionType) => { setSelectedActions(prev => prev.includes(actionType) ? prev.filter(a => a !== actionType) : [...prev, actionType]); };
+
+            const handleRegisterClick = () => { if(selectedActions.length === 0) { alert('Selecione pelo menos uma ação para registrar.'); return; } onRegisterCadence(prospect, selectedActions); setSelectedActions([]); };
+
+            const handleScheduleTask = () => { if(!newTaskDesc || !newTaskDate) { alert("Por favor, preencha a descrição e a data da tarefa."); return; } onAddTask(prospect, newTaskDesc, newTaskDate); setNewTaskDesc(''); setNewTaskDate(''); };
+
+            const handleAddObservationClick = () => { if (!newObservation.trim()) return; onAddObservation(prospect, newObservation); setNewObservation(''); };
+
+
+
+            const handleTagToggle = (tagName) => {
+
+                const currentTags = editedData.tags || [];
+
+                const newTags = currentTags.includes(tagName) ? currentTags.filter(t => t !== tagName) : [...currentTags, tagName];
+
+                setEditedData(prev => ({...prev, tags: newTags}));
+
+            };
+
+
+
+            const handleCreateTag = () => {
+
+                if (!newTagName.trim()) { alert('Por favor, insira um nome para a tag.'); return; }
+
+                onCreateTag(newTagName, newTagColor);
+
+                setNewTagName('');
+
+            };
+
+
+
+            const { cadenceHistory, observationHistory, editHistory } = useMemo(() => {
+
+                const history = (prospect.edit_history || []);
+
+                const cadence = (tasks || []).filter(t => t.prospect_id === prospect.id && t.type === 'Cadência').sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+                const observations = history.filter(h => h.field === 'observation').sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                const edits = history.filter(h => h.field !== 'observation').sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                return { cadenceHistory: cadence, observationHistory: observations, editHistory: edits };
+
+            }, [tasks, prospect]);
+
+            
+
+            const toggleSection = (section) => setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+
+            
+
+            const QuickActionButton = ({ type, color, children }) => { const isSelected = selectedActions.includes(type); return (<button onClick={() => handleActionToggle(type)} className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-all duration-200 border-2 ${isSelected ? `${color.selectedBg} ${color.selectedText} ${color.selectedBorder}` : `${color.bg} text-white hover:${color.hoverBg}`}`}>{children}</button>) };
+
+            const actionColors = { 'Ligação': { bg: 'bg-violet-500', hoverBg: 'bg-violet-600', selectedBg: 'bg-violet-100', selectedText: 'text-violet-700', selectedBorder: 'border-violet-500' }, 'Conexão': { bg: 'bg-green-500', hoverBg: 'bg-green-600', selectedBg: 'bg-green-100', selectedText: 'text-green-700', selectedBorder: 'border-green-500' }, 'Decisor': { bg: 'bg-orange-500', hoverBg: 'bg-orange-600', selectedBg: 'bg-orange-100', selectedText: 'text-orange-700', selectedBorder: 'border-orange-500' }, 'Reunião Marcada': { bg: 'bg-indigo-500', hoverBg: 'bg-indigo-600', selectedBg: 'bg-indigo-100', selectedText: 'text-indigo-700', selectedBorder: 'border-indigo-500' }, 'Reunião Realizada': { bg: 'bg-teal-500', hoverBg: 'bg-teal-600', selectedBg: 'bg-teal-100', selectedText: 'text-teal-700', selectedBorder: 'border-teal-500' }, 'Venda': { bg: 'bg-amber-400', hoverBg: 'bg-amber-500', selectedBg: 'bg-amber-100', selectedText: 'text-amber-700', selectedBorder: 'border-amber-500' }, };
+
+            
+
+            return (
+
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+
+                        <div className="p-4 border-b flex justify-between items-center"><h2 className="text-xl font-semibold text-brand-text-dark">{editedData.name}</h2><button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-3xl leading-none">&times;</button></div>
+
+                        <div className="flex-1 flex overflow-hidden">
+
+                            <div className="w-1/2 p-6 border-r overflow-y-auto custom-scrollbar"><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-700">Nome da Empresa</label><input type="text" name="name" value={editedData.name || ''} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div><div><label className="block text-sm font-medium text-gray-700">Nome do Contato</label><input type="text" name="contact_name" value={editedData.contact_name || ''} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div><div><label className="block text-sm font-medium text-gray-700">E-mail</label><input type="email" name="email" value={editedData.email || ''} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div><div><label className="block text-sm font-medium text-gray-700">Telefone</label><input type="tel" name="phone" value={editedData.phone || ''} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div><div><label className="block text-sm font-medium text-gray-700">Valor</label><input type="number" name="value" value={editedData.value || 0} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div><div><label className="block text-sm font-medium text-gray-700">Status</label><select name="status" value={editedData.status} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral">{KANBAN_STAGES.map(s => <option key={s} value={s}>{s}</option>)}</select></div><div><label className="block text-sm font-medium text-gray-700">Responsável</label><select name="user_id" value={editedData.user_id} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral">{(users || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+
+                            <div className="pt-2">
+
+                                {!isDeleting ? (
+
+                                    <div className="flex gap-4">
+
+                                        <button onClick={() => setIsDeleting(true)} className="w-1/3 mt-2 px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-all lowercase flex items-center justify-center gap-2">{Icons.trash}Excluir</button>
+
+                                        <button onClick={handleSave} className="w-2/3 mt-2 px-4 py-2 bg-brand-coral text-white rounded-lg font-semibold hover:bg-brand-coral-dark shadow-sm hover:shadow-lg transition-all lowercase">Salvar Alterações</button>
+
+                                    </div>
+
+                                ) : (
+
+                                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-center">
+
+                                        <strong className="font-bold">Tem certeza?</strong><p className="block sm:inline">Esta ação não pode ser desfeita.</p>
+
+                                        <div className="flex justify-center gap-4 mt-4">
+
+                                            <button onClick={() => setIsDeleting(false)} className="px-4 py-2 bg-gray-300 text-black rounded-lg">Cancelar</button>
+
+                                            <button onClick={() => onDelete(prospect.id)} className="px-4 py-2 bg-red-600 text-white rounded-lg">Confirmar Exclusão</button>
+
+                                        </div>
+
+                                    </div>
+
+                                )}
+
+                            </div>
+
+                            </div>
+
+                               <div className="mt-6 pt-6 border-t"><h3 className="text-lg font-semibold text-brand-text-dark flex items-center gap-2 mb-4">{Icons.calendar} Tarefas & Observações</h3>
+
+                                <div className="space-y-3">
+
+                                    <textarea placeholder="Adicione uma nota..." value={newObservation} onChange={(e) => setNewObservation(e.target.value)} rows="3" className="block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral lowercase" />
+
+                                    <button onClick={handleAddObservationClick} disabled={!newObservation.trim()} className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400 lowercase">Adicionar Observação</button>
+
+                                </div>
+
+                                <div className="space-y-3 mt-4">
+
+                                    <input type="text" placeholder="descreva a próxima ação..." value={newTaskDesc} onChange={(e) => setNewTaskDesc(e.target.value)} className="block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral lowercase" />
+
+                                    <input type="datetime-local" value={newTaskDate} onChange={(e) => setNewTaskDate(e.target.value)} className="block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black" />
+
+                                    <button onClick={handleScheduleTask} disabled={!newTaskDesc || !newTaskDate} className="w-full px-4 py-2 bg-brand-coral/80 text-white rounded-lg font-semibold hover:bg-brand-coral disabled:bg-gray-400 lowercase">agendar tarefa</button>
+
+                                </div>
+
+                            </div>
+
+                            </div>
+
+                            <div className="w-1/2 p-6 overflow-y-auto custom-scrollbar bg-white"><h3 className="text-lg font-semibold text-brand-text-dark mb-4">Histórico de Atividades</h3>
+
+                                <div className="space-y-2">
+
+                                    <div className="border rounded-md"><div className="p-2 cursor-pointer flex justify-between items-center bg-gray-100" onClick={() => toggleSection('cadencia')}><h4 className="font-semibold text-gray-700">Cadência</h4><span className={`transform transition-transform ${expandedSections.cadencia ? 'rotate-90' : ''}`}>{Icons.arrow}</span></div>{expandedSections.cadencia && <ul className="p-2 space-y-2">{cadenceHistory.map(item => <li className="text-sm" key={`cad-${item.id}`}>{item.description} - <span className="text-xs text-gray-400">{new Date(item.created_at).toLocaleString('pt-BR')}</span></li>)}</ul>}</div>
+
+                                    <div className="border rounded-md"><div className="p-2 cursor-pointer flex justify-between items-center bg-gray-100" onClick={() => toggleSection('observacoes')}><h4 className="font-semibold text-gray-700">Observações</h4><span className={`transform transition-transform ${expandedSections.observacoes ? 'rotate-90' : ''}`}>{Icons.arrow}</span></div>{expandedSections.observacoes && <ul className="p-2 space-y-2">{observationHistory.map((item, i) => <li className="text-sm" key={`obs-${i}`}>{item.content} <span className="text-xs text-gray-400">({new Date(item.timestamp).toLocaleString('pt-BR')})</span></li>)}</ul>}</div>
+
+                                    <div className="border rounded-md"><div className="p-2 cursor-pointer flex justify-between items-center bg-gray-100" onClick={() => toggleSection('alteracoes')}><h4 className="font-semibold text-gray-700">Alterações no Card</h4><span className={`transform transition-transform ${expandedSections.alteracoes ? 'rotate-90' : ''}`}>{Icons.arrow}</span></div>{expandedSections.alteracoes && <ul className="p-2 space-y-2">{editHistory.map((item, i) => <li className="text-sm" key={`edit-${i}`}>{`Campo '${item.field}' alterado de '${item.oldValue}' para '${item.newValue}'`} <span className="text-xs text-gray-400">({new Date(item.timestamp).toLocaleString('pt-BR')})</span></li>)}</ul>}</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div className="p-4 bg-gray-50 border-t"><h3 className="text-sm font-medium text-gray-600 mb-2 lowercase">ações rápidas (cadência inteligente)</h3><div className="flex flex-wrap gap-2 items-center"><QuickActionButton type="Ligação" color={actionColors['Ligação']}>Ligação</QuickActionButton><QuickActionButton type="Conexão" color={actionColors['Conexão']}>Conexão</QuickActionButton><QuickActionButton type="Decisor" color={actionColors['Decisor']}>Decisor</QuickActionButton><QuickActionButton type="Reunião Marcada" color={actionColors['Reunião Marcada']}>Reunião Marcada</QuickActionButton><QuickActionButton type="Reunião Realizada" color={actionColors['Reunião Realizada']}>Reunião Realizada</QuickActionButton><QuickActionButton type="Venda" color={actionColors['Venda']}>Venda</QuickActionButton><div className="flex-grow flex items-center justify-end gap-4"><span className="text-sm text-gray-600 font-medium">{selectedActions.length} ação(ões) = 1 cadência</span><button onClick={handleRegisterClick} className="px-4 py-2 bg-brand-coral text-white rounded-lg font-semibold hover:bg-brand-coral-dark disabled:bg-gray-400 lowercase" disabled={selectedActions.length === 0}>registar ações</button></div></div></div>
+
+                    </div>
+
+                </div>
+
+            );
+
+        }
+
+        
+
+        function AddProspectModal({ isOpen, onClose, onSave, users, currentUserId }) {
+
+            const initialData = { name: '', contact_name: '', value: 0, email: '', phone: '', status: 'Novo', user_id: currentUserId, observation: '', tags: [] };
+
+            const [formData, setFormData] = useState(initialData);
+
+            
+
+            useEffect(() => {
+
+                if (isOpen) setFormData({...initialData, user_id: currentUserId});
+
+            }, [isOpen, currentUserId]);
+
+
+
+            if (!isOpen) return null;
+
+
+
+            const handleChange = (e) => {
+
+                const { name, value } = e.target;
+
+                setFormData(prev => ({ ...prev, [name]: name === 'value' ? parseFloat(value) || 0 : value }));
+
+            };
+
+
+
+            const handleSubmit = (e) => {
+
+                e.preventDefault();
+
+                onSave(formData);
+
+                onClose();
+
+            };
+
+
+
+            return (
+
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+
+                        <div className="p-4 border-b flex justify-between items-center"><h2 className="text-xl font-semibold text-black">Novo Contato</h2><button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-3xl leading-none">&times;</button></div>
+
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
+                            <div><label className="block text-sm font-medium text-gray-700">Nome da Empresa</label><input type="text" name="name" value={formData.name} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" required /></div>
+
+                            <div><label className="block text-sm font-medium text-gray-700">Nome do Contato</label><input type="text" name="contact_name" value={formData.contact_name} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
+
+                            <div><label className="block text-sm font-medium text-gray-700">E-mail</label><input type="email" name="email" value={formData.email} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
+
+                            <div><label className="block text-sm font-medium text-gray-700">Telefone</label><input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
+
+                            <div><label className="block text-sm font-medium text-gray-700">Valor da Proposta</label><input type="number" name="value" value={formData.value} onChange={handleChange} className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral" /></div>
+
+                            <div><label className="block text-sm font-medium text-gray-700">Observação</label><textarea name="observation" value={formData.observation} onChange={handleChange} rows="3" className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral"></textarea></div>
+
+                            <div className="flex justify-end gap-4 pt-4">
+
+                                <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold">Cancelar</button>
+
+                                <button type="submit" className="px-4 py-2 bg-brand-coral text-white rounded-lg font-semibold hover:bg-brand-coral-dark">Salvar Contato</button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            );
+
+        }
+
+
+
+        function ImportModal({ isOpen, onClose, onImportSuccess }) {
+
+            const [step, setStep] = useState(1); const [fileHeaders, setFileHeaders] = useState([]); const [fileData, setFileData] = useState([]); const [mapping, setMapping] = useState({}); const [importReport, setImportReport] = useState(null);
+
+            const resetState = () => { setStep(1); setFileHeaders([]); setFileData([]); setMapping({}); setImportReport(null); };
+
+            const handleFileDrop = (e) => { e.preventDefault(); const file = e.dataTransfer.files[0]; processFile(file); };
+
+            const handleFileSelect = (e) => { const file = e.target.files[0]; processFile(file); };
+
+            const processFile = (file) => { if (!file) return; const reader = new FileReader(); reader.onload = (e) => { const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, { type: 'array' }); const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName]; const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); const headers = json[0] || []; const records = json.slice(1).map(row => { let record = {}; headers.forEach((header, i) => record[header] = row[i]); return record; }); setFileHeaders(headers); setFileData(records); autoMapColumns(headers); setStep(2); }; reader.readAsArrayBuffer(file); };
+
+            const autoMapColumns = (headers) => { const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/gi, ''); let newMapping = {}; headers.forEach(header => { const normalizedHeader = normalize(header); const match = CRM_FIELDS.find(field => normalize(CRM_FIELD_LABELS[field]).includes(normalizedHeader)); newMapping[header] = match || ''; }); setMapping(newMapping); };
+
+            const handleMappingChange = (header, crmField) => { setMapping(prev => ({...prev, [header]: crmField })); };
+
+            const handleConfirmImport = () => { onImportSuccess(fileData, mapping); setImportReport({ success: fileData.length, failed: 0, duplicates: 0 }); setStep(3); };
+
+            const handleClose = () => { resetState(); onClose(); };
+
+            return ( isOpen && (<div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"><div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl"><div className="p-4 border-b flex justify-between items-center"><h2 className="text-xl font-semibold text-black">importar contatos - passo {step}/3</h2><button onClick={handleClose} className="text-gray-400 hover:text-gray-600 text-3xl leading-none">&times;</button></div>
+
+                {step === 1 && (<div onDrop={handleFileDrop} onDragOver={(e) => e.preventDefault()} className="p-8 border-dashed border-2 border-gray-300 m-8 rounded-lg text-center">{Icons.upload}<p className="mt-2 text-sm text-gray-600">Arraste e solte o seu ficheiro .csv ou .xlsx aqui</p><p className="text-xs text-gray-500 mt-1">ou</p><label htmlFor="file-upload" className="cursor-pointer mt-2 inline-block bg-brand-coral text-white font-semibold py-2 px-4 rounded-lg hover:bg-brand-coral-dark lowercase">selecione um ficheiro</label><input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileSelect} accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" /><div className="mt-6 p-4 bg-gray-100 rounded-lg text-left"><p className="text-xs font-semibold text-gray-500 mb-2">sequência recomendada de colunas:</p><div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center text-xs"><span className="bg-slate-200 p-2 rounded truncate font-medium">Nome da Empresa</span><span className="bg-slate-200 p-2 rounded truncate font-medium">Nome do Contato</span><span className="bg-slate-200 p-2 rounded truncate font-medium">E-mail</span><span className="bg-slate-200 p-2 rounded truncate font-medium">Telefone</span><span className="bg-slate-200 p-2 rounded truncate font-medium">Valor</span></div></div></div>)}
+
+                {step === 2 && (<div className="p-8"><h3 className="font-semibold text-black mb-4">mapeie as colunas do seu ficheiro:</h3><div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar pr-4">{fileHeaders.map(header => (<div key={header} className="grid grid-cols-2 gap-4 items-center"><span className="font-medium text-gray-600 bg-gray-100 p-2 rounded-md truncate">{header}</span><select value={mapping[header] || ''} onChange={(e) => handleMappingChange(header, e.target.value)} className="block w-full border-gray-300 bg-white rounded-md shadow-sm p-2 text-black focus:ring-brand-coral focus:border-brand-coral"><option value="">ignorar esta coluna</option>{CRM_FIELDS.map(field => <option key={field} value={field}>{CRM_FIELD_LABELS[field]}</option>)}</select></div>))}</div><div className="mt-8 flex justify-end"><button onClick={handleConfirmImport} disabled={!Object.values(mapping).some(v => v === 'name' || v === 'contact_name')} className="px-6 py-2 bg-brand-coral text-white rounded-lg font-semibold hover:bg-brand-coral-dark disabled:bg-gray-400 lowercase">importar</button></div></div>)}
+
+                {step === 3 && (<div className="p-8 text-center"><h3 className="text-2xl font-bold text-green-600 mb-4">importação concluída!</h3><div className="space-y-2 text-lg text-gray-800"><p className="flex items-center justify-center text-green-600">{Icons.check} {importReport.success} contatos importados com sucesso.</p><p className="flex items-center justify-center text-red-500">{Icons.cross} {importReport.failed} contatos falharam.</p></div><button onClick={handleClose} className="mt-8 px-6 py-2 bg-brand-coral text-white rounded-lg font-semibold hover:bg-brand-coral-dark lowercase">fechar</button></div>)}
+
+            </div></div>) );
+
+        }
+
+
+
+        function KanbanView({ prospects, users, tasks, onStatusChange, onCardClick, handleDragStart, profile, selectedUserId, setSelectedUserId, allTags }) {
+
+            const handleDragOver = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over') };
+
+            const handleDragLeave = (e) => e.currentTarget.classList.remove('drag-over');
+
+            const handleDrop = (e, newStatus) => { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); const prospectId = e.dataTransfer.getData("prospectId"); onStatusChange(parseInt(prospectId), newStatus); };
+
+            const prospectsByStage = useMemo(() => { const grouped = {}; KANBAN_STAGES.forEach(stage => grouped[stage] = []); (prospects || []).forEach(p => { if (grouped[p.status]) grouped[p.status].push(p) }); return grouped; }, [prospects]);
+
+            return (
+
+                <div className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col">
+
+                    {profile?.role === 'admin' && (
+
+                        <div className="flex justify-end mb-4">
+
+                             <select onChange={(e) => setSelectedUserId(e.target.value)} value={selectedUserId} className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-coral">
+
+                                <option value="all">Todos os Usuários</option>
+
+                                {(users || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+
+                            </select>
+
+                        </div>
+
+                    )}
+
+                    <div className="flex-1 overflow-x-auto custom-scrollbar"><div className="flex gap-6 min-w-max h-full">{KANBAN_STAGES.map(stage => (<div key={stage} className="bg-brand-base-white/60 rounded-xl w-80 flex-shrink-0 flex flex-col kanban-column border-2 border-transparent transition-colors" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={(e) => handleDrop(e, stage)}><div className={`p-4 border-b-2 ${stage === 'Venda' ? 'bg-green-100 text-green-800' : ''} ${stage === 'Perdido' || stage === 'No Show' ? 'bg-red-100 text-red-800' : ''}`}><h2 className="font-semibold text-brand-text-dark">{stage} <span className="text-sm font-medium text-gray-500">{(prospectsByStage[stage] || []).length}</span></h2></div><div className="p-2 h-full overflow-y-auto custom-scrollbar">{(prospectsByStage[stage] || []).map(prospect => { const contactCount = (tasks || []).filter(t => t.prospect_id === prospect.id && t.completed && t.type === 'Cadência').length; return <ProspectCard key={prospect.id} prospect={prospect} onCardClick={onCardClick} contactCount={contactCount} onDragStart={handleDragStart} allTags={allTags} />; })}</div></div>))}</div></div>
+
+                </div>
+
+            );
+
+        }
+
+        
+
+        function ListView({ prospects, users, tasks, onCardClick, onSelect, selectedIds, profile, selectedUserId, setSelectedUserId, allTags }) {
+
+            const [filter, setFilter] = useState(''); const [collapsedStages, setCollapsedStages] = useState({});
+
+            const toggleStage = (stage) => { setCollapsedStages(prev => ({ ...prev, [stage]: !prev[stage] })); };
+
+            const stageColors = { 'Novo': 'bg-gray-500', 'Contato Inicial': 'bg-blue-500', 'Contato com Decisor': 'bg-purple-500', 'Proposta Enviada': 'bg-orange-500', 'Venda': 'bg-green-500', 'Perdido': 'bg-red-500', 'No Show': 'bg-red-700' };
+
+            const filteredProspects = useMemo(() => (prospects || []).filter(p => p.name.toLowerCase().includes(filter.toLowerCase())), [prospects, filter]);
+
+            const prospectsByStage = useMemo(() => { const grouped = {}; KANBAN_STAGES.forEach(stage => grouped[stage] = []); filteredProspects.forEach(p => grouped[p.status]?.push(p)); return grouped; }, [filteredProspects]);
+
+            return (<div className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col">
+
+                <div className="flex justify-between items-center mb-6">
+
+                    <div className="relative flex-grow"><div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">{Icons.search}</div><input type="text" placeholder="Filtrar por nome do prospect..." value={filter} onChange={(e) => setFilter(e.target.value)} className="block w-full max-w-lg pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-brand-base-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-brand-coral focus:border-brand-coral sm:text-sm" /></div>
+
+                    {profile?.role === 'admin' && (
+
+                        <select onChange={(e) => setSelectedUserId(e.target.value)} value={selectedUserId} className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-coral">
+
+                            <option value="all">Todos os Usuários</option>
+
+                            {(users || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+
+                        </select>
+
+                    )}
+
+                </div>
+
+                <div className="flex-1 overflow-y-auto custom-scrollbar pr-2"><div className="space-y-4">{KANBAN_STAGES.map(stage => { const prospectsInStage = prospectsByStage[stage]; const isCollapsed = collapsedStages[stage]; if(filter && prospectsInStage.length === 0) return null; return (<div key={stage} className="bg-brand-base-white rounded-lg shadow-sm"><div className="p-3 flex items-center justify-between cursor-pointer" onClick={() => toggleStage(stage)}><div className="flex items-center gap-3"><span className={`${isCollapsed ? '' : 'rotate-90'}`}>{Icons.arrow}</span><span className={`px-3 py-1 text-xs font-bold text-white rounded-full ${stageColors[stage]}`}>{stage}</span><span className="text-sm font-semibold text-gray-600">{prospectsInStage.length}</span></div></div>{!isCollapsed && (<div className="border-t border-gray-200">{prospectsInStage.length > 0 ? (<table className="min-w-full"><tbody className="divide-y divide-gray-200">{prospectsInStage.map(prospect => { const user = (users || []).find(u => u.id === prospect.user_id); const contactCount = (tasks || []).filter(t => t.prospect_id === prospect.id && t.completed && t.type === 'Cadência').length; return (<tr key={prospect.id} className="hover:bg-gray-50"><td className="px-4 py-3"><input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-brand-coral focus:ring-brand-coral" checked={selectedIds.includes(prospect.id)} onChange={() => onSelect(prospect.id)} /></td><td className="px-4 py-3 whitespace-nowrap cursor-pointer" onClick={() => onCardClick(prospect)}><div className="text-sm font-medium text-brand-text-dark">{prospect.name}</div><div className="text-sm text-gray-500">{prospect.contact_name}</div></td><td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{prospect.phone}</td><td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-600">{prospect.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td className="px-4 py-3 whitespace-nowrap text-sm text-brand-coral font-semibold">{contactCount} contatos</td><td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800"><span className="flex items-center" title={`Responsável: ${user?.name || 'Não encontrado'}`}><span className="text-lg mr-2">{user?.avatar || '👤'}</span>{user?.name || 'Não encontrado'}</span></td></tr>); })}</tbody></table>) : <p className="px-6 py-4 text-sm text-gray-500">Nenhum prospect nesta etapa.</p>}</div>)}</div>); })}</div></div></div>);
+
+        }
+
+        
+
+        function TasksView({ tasks, prospects, users, onTaskToggle, onCardClick, profile, selectedUserId, setSelectedUserId }) {
+
+            const [showCompleted, setShowCompleted] = useState(false);
+
+
+
+            const { overdueTasks, todayTasks, upcomingTasks, completedTasks } = useMemo(() => {
+
+                const now = new Date();
+
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                const tomorrow = new Date(today);
+
+                tomorrow.setDate(tomorrow.getDate() + 1);
+
+
+
+                const userFilteredTasks = (profile?.role === 'admin' && selectedUserId !== 'all') 
+
+                    ? (tasks || []).filter(t => t.user_id === selectedUserId)
+
+                    : (tasks || []);
+
+
+
+                const open = userFilteredTasks.filter(t => !t.completed && t.type !== 'Cadência');
+
+                
+
+                const overdue = open.filter(t => new Date(t.due_date) < today);
+
+                const forToday = open.filter(t => {
+
+                    const taskDate = new Date(t.due_date);
+
+                    return taskDate >= today && taskDate < tomorrow;
+
+                });
+
+                const upcoming = open.filter(t => new Date(t.due_date) >= tomorrow).sort((a,b) => new Date(a.due_date) - new Date(b.due_date));
+
+                const completed = userFilteredTasks.filter(t => t.completed).sort((a,b) => new Date(b.due_date) - new Date(a.due_date));
+
+                
+
+                return { overdueTasks: overdue, todayTasks: forToday, upcomingTasks: upcoming, completedTasks: completed };
+
+            }, [tasks, selectedUserId, profile]);
+
+            
+
+            const TaskItem = ({ task }) => {
+
+                const prospect = (prospects || []).find(p => p.id === task.prospect_id);
+
+                const user = (users || []).find(u => u.id === task.user_id);
+
+                const isOverdue = new Date(task.due_date) < new Date() && !task.completed;
+
+                return (
+
+                    <div onClick={() => prospect && onCardClick(prospect)} className="bg-brand-base-white rounded-lg shadow-md p-4 flex items-center justify-between hover:shadow-lg transition-shadow cursor-pointer">
+
+                        <div className="flex items-center"><input type="checkbox" checked={task.completed} onClick={(e) => e.stopPropagation()} onChange={() => onTaskToggle(task.id)} className="h-5 w-5 rounded border-gray-300 text-brand-coral focus:ring-brand-coral"/><div className="ml-4"><p className="text-sm font-medium text-brand-text-dark">{task.description}</p><p className="text-sm text-gray-500">Para: <span className="font-semibold">{prospect?.name || 'Prospect não encontrado'}</span></p></div></div>
+
+                        <div className="flex items-center space-x-4"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${task.completed ? 'bg-gray-100 text-gray-800' : (isOverdue ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800')}`}>Vencimento: {new Date(task.due_date).toLocaleString('pt-BR', {dateStyle: 'short', timeStyle: 'short'})}</span><span className="flex items-center text-gray-600" title={`Responsável: ${user?.name || 'Não encontrado'}`}><span className="text-lg">{user?.avatar || '👤'}</span></span></div>
+
+                    </div>
+
+                );
+
+            };
+
+
+
+            return(<div className="flex-1 p-4 sm:p-6 lg:p-8 space-y-8"><div className="flex justify-between items-center"><h1 className="text-3xl font-semibold text-brand-text-dark mb-6">minhas tarefas</h1>{profile?.role === 'admin' && ( <select onChange={(e) => setSelectedUserId(e.target.value)} value={selectedUserId} className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-coral"><option value="all">Todos os Usuários</option>{(users || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select> )}</div>
+
+            {overdueTasks.length > 0 && <div className="space-y-4"><h2 className="text-xl font-bold text-red-600">Atrasadas</h2>{overdueTasks.map(task => <TaskItem key={task.id} task={task}/>)}</div>}
+
+            {todayTasks.length > 0 && <div className="space-y-4"><h2 className="text-xl font-bold text-blue-600">Para Hoje</h2>{todayTasks.map(task => <TaskItem key={task.id} task={task}/>)}</div>}
+
+            {upcomingTasks.length > 0 && <div className="space-y-4"><h2 className="text-xl font-bold text-gray-700">Próximas</h2>{upcomingTasks.map(task => <TaskItem key={task.id} task={task}/>)}</div>}
+
+            <div className="bg-brand-base-white rounded-lg shadow-sm"><div className="p-3 flex items-center justify-between cursor-pointer" onClick={() => setShowCompleted(prev => !prev)}><div className="flex items-center gap-3"><span className={`${showCompleted ? 'rotate-90' : ''}`}>{Icons.arrow}</span><h2 className="text-lg font-semibold text-gray-600">Histórico de Tarefas Concluídas</h2></div></div>{showCompleted && (<div className="border-t border-gray-200 p-4 space-y-4">{completedTasks.length > 0 ? completedTasks.map(task => <TaskItem key={task.id} task={task}/>) : <p className="text-gray-500">Nenhuma tarefa concluída ainda.</p>}</div>)}</div>
+
+            </div>);
+
+        }
+
+        
+
+        function DashboardView({ prospects, users, tasks, profile, selectedUserId, setSelectedUserId }) {
+
+            const [period, setPeriod] = useState('last7days');
+
+            const [customStartDate, setCustomStartDate] = useState('');
+
+            const [customEndDate, setCustomEndDate] = useState('');
+
+            const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+            const dropdownRef = useRef(null);
+
+
+
+            useEffect(() => {
+
+                const handleClickOutside = (event) => {
+
+                    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+
+                        setIsDropdownOpen(false);
+
+                    }
+
+                };
+
+                document.addEventListener("mousedown", handleClickOutside);
+
+                return () => document.removeEventListener("mousedown", handleClickOutside);
+
+            }, [dropdownRef]);
+
+            
+
+            const { filteredProspects, filteredTasks } = useMemo(() => {
+
+                let start, end;
+
+                const today = new Date();
+
+                today.setHours(0, 0, 0, 0);
+
+
+
+                switch (period) {
+
+                    case 'today': start = new Date(today); end = new Date(today); end.setHours(23, 59, 59, 999); break;
+
+                    case 'yesterday': start = new Date(today); start.setDate(today.getDate() - 1); end = new Date(start); end.setHours(23, 59, 59, 999); break;
+
+                    case 'thisMonth': start = new Date(today.getFullYear(), today.getMonth(), 1); end = new Date(today.getFullYear(), today.getMonth() + 1, 0); end.setHours(23, 59, 59, 999); break;
+
+                    case 'last7days': start = new Date(today); start.setDate(today.getDate() - 6); end = new Date(); end.setHours(23, 59, 59, 999); break;
+
+                    case 'custom': if(customStartDate && customEndDate) { start = new Date(customStartDate); end = new Date(customEndDate); end.setHours(23, 59, 59, 999); } else { return { filteredProspects: [], filteredTasks: [] }; } break;
+
+                    case 'all': default: break;
+
+                }
+
+                
+
+                let timeFilteredProspects = (start && end) ? (prospects || []).filter(p => { const pDate = new Date(p.created_at); return pDate >= start && pDate <= end; }) : prospects;
+
+                let timeFilteredTasks = (start && end) ? (tasks || []).filter(t => { const tDate = new Date(t.created_at); return tDate >= start && tDate <= end; }) : tasks;
+
+                
+
+                if (selectedUserId === 'all') {
+
+                    return { filteredProspects: timeFilteredProspects, filteredTasks: timeFilteredTasks };
+
+                }
+
+                
+
+                return {
+
+                    filteredProspects: timeFilteredProspects.filter(p => p.user_id === selectedUserId),
+
+                    filteredTasks: timeFilteredTasks.filter(t => t.user_id === selectedUserId)
+
+                };
+
+
+
+            }, [period, customStartDate, customEndDate, prospects, tasks, selectedUserId]);
+
+
+
+            const periodLabels = { 'today': 'Hoje', 'yesterday': 'Ontem', 'last7days': 'Últimos 7 dias', 'thisMonth': 'Este Mês', 'all': 'Máximo', 'custom': 'Personalizado' };
+
+            const handlePeriodChange = (newPeriod) => { setPeriod(newPeriod); if (newPeriod !== 'custom') { setIsDropdownOpen(false); } };
+
+            
+
+            const ActivityKpiCard = ({ title, value, icon, iconBgColor }) => ( <div className="bg-brand-base-white p-5 rounded-lg shadow-md flex items-center justify-between"><div><h3 className="text-sm font-medium text-gray-500">{title}</h3><p className="mt-1 text-3xl font-semibold text-brand-text-dark">{value}</p></div><div className={`p-3 rounded-full ${iconBgColor}`}>{icon}</div></div> );
+
+            const RankingPodium = ({ leaderboard }) => { const topThree = leaderboard.slice(0, 3); const podiumOrder = [1, 0, 2]; const podiumStyles = {0: { bgColor: 'bg-brand-coral', height: 'h-40', rank: '1º' }, 1: { bgColor: 'bg-brand-dark-blue', height: 'h-32', rank: '2º' }, 2: { bgColor: 'bg-brand-dark-blue/70', height: 'h-24', rank: '3º' },}; while(topThree.length < 3) { topThree.push({ id: `placeholder-${topThree.length}`, name: 'Vazio', avatar: '👤', score: 0 });} return (<div className="bg-brand-base-white p-6 rounded-lg shadow-md"><h3 className="text-lg font-semibold text-brand-text-dark mb-4">Pódio de Ligações</h3><div className="flex items-end justify-center gap-4 text-center h-52">{podiumOrder.map(index => { const user = topThree[index]; const style = podiumStyles[index]; if (!user) return null; return (<div key={user.id} className="flex flex-col items-center w-28"><span className="text-4xl mb-2">{user.avatar}</span><p className="font-bold text-brand-text-dark truncate w-full">{user.name}</p><div className={`flex items-center justify-center rounded-t-lg w-full ${style.bgColor} ${style.height}`}><div className="text-white font-black text-4xl" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>{style.rank}</div></div><div className="bg-brand-text-dark w-full p-2 rounded-b-lg text-white font-semibold text-sm">{user.score} ligações</div></div>);})}</div></div>);};
+
+            
+
+            const closedWonValue = useMemo(() => filteredProspects.filter(p => p.status === 'Venda').reduce((sum, p) => sum + p.value, 0), [filteredProspects]);
+
+            const activityKpiData = useMemo(() => { const cadenceTasks = filteredTasks.filter(t => t.type === 'Cadência'); let ligacoes = 0, conexoes = 0, contatoDecisor = 0, reunioes = 0, reunioesRealizadas = 0; cadenceTasks.forEach(task => { if (task.description.includes('Ligação')) ligacoes++; if (task.description.includes('Conexão')) conexoes++; if (task.description.includes('Decisor')) contatoDecisor++; if (task.description.includes('Reunião Marcada')) reunioes++; if (task.description.includes('Reunião Realizada')) reunioesRealizadas++; }); return { ligacoes, conexoes, contatoDecisor, reunioes, reunioesRealizadas, vendas: filteredProspects.filter(p => p.status === 'Venda').length } }, [filteredTasks, filteredProspects]);
+
+            const funnelData = useMemo(() => { const d = {}; KANBAN_STAGES.forEach(s => d[s] = filteredProspects.filter(p => p.status === s).length); return d; }, [filteredProspects]);
+
+            
+
+            const leaderboardData = useMemo(() => (users || []).map(user => { const callTasks = (tasks || []).filter(t => t.user_id === user.id && t.description.includes('Ligação')); return { ...user, score: callTasks.length }; }).sort((a, b) => b.score - a.score), [tasks, users]);
+
+            const salesLeaderboardData = useMemo(() => (users || []).map(user => { const userSales = filteredProspects.filter(p => p.user_id === user.id && p.status === 'Venda'); return { ...user, salesCount: userSales.length, totalValue: userSales.reduce((s, p) => s + p.value, 0) }; }).sort((a, b) => b.totalValue - a.totalValue), [filteredProspects, users]);
+
+
+
+            return (<div className="flex-1 p-4 sm:p-6 lg:p-8 space-y-8 custom-scrollbar overflow-y-auto">
+
+                <div className="flex justify-between items-center">
+
+                    <div><h1 className="text-3xl font-semibold text-brand-text-dark lowercase">dashboard</h1><p className="text-gray-500">visão geral das suas métricas de prospecção</p></div>
+
+                    <div className="flex items-center space-x-4">
+
+                        {profile?.role === 'admin' && (
+
+                            <select onChange={(e) => setSelectedUserId(e.target.value)} value={selectedUserId} className="p-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-coral">
+
+                                <option value="all">Todos os Usuários</option>
+
+                                {(users || []).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+
+                            </select>
+
+                        )}
+
+                        <div className="relative" ref={dropdownRef}>
+
+                            <button onClick={() => setIsDropdownOpen(prev => !prev)} className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm">
+
+                                <span className="font-semibold text-brand-text-dark">{periodLabels[period]}</span>
+
+                                {Icons.arrow}
+
+                            </button>
+
+                            {isDropdownOpen && (
+
+                                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl z-10 p-4">
+
+                                    <ul className="space-y-1 mb-4">
+
+                                        <li><button onClick={() => handlePeriodChange('today')} className="w-full text-left px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100">Hoje</button></li>
+
+                                        <li><button onClick={() => handlePeriodChange('yesterday')} className="w-full text-left px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100">Ontem</button></li>
+
+                                        <li><button onClick={() => handlePeriodChange('thisMonth')} className="w-full text-left px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100">Este Mês</button></li>
+
+                                        <li><button onClick={() => handlePeriodChange('last7days')} className="w-full text-left px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100">Últimos 7 dias</button></li>
+
+                                        <li><button onClick={() => handlePeriodChange('all')} className="w-full text-left px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100">Máximo</button></li>
+
+                                    </ul>
+
+                                    <div className="border-t pt-4">
+
+                                        <p className="text-sm font-semibold mb-2">Período Personalizado</p>
+
+                                        <div className="space-y-2 text-sm">
+
+                                            <input type="date" value={customStartDate} onChange={e => {setPeriod('custom'); setCustomStartDate(e.target.value)}} className="p-2 border rounded-md w-full"/>
+
+                                            <input type="date" value={customEndDate} onChange={e => {setPeriod('custom'); setCustomEndDate(e.target.value)}} className="p-2 border rounded-md w-full"/>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><ActivityKpiCard title="ligações" value={activityKpiData.ligacoes} iconBgColor="bg-blue-100" icon={<svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>} /><ActivityKpiCard title="conexões" value={activityKpiData.conexoes} iconBgColor="bg-green-100" icon={<svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>} /><ActivityKpiCard title="contato decisor" value={activityKpiData.contatoDecisor} iconBgColor="bg-purple-100" icon={<svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>} /><ActivityKpiCard title="reuniões" value={activityKpiData.reunioes} iconBgColor="bg-orange-100" icon={<svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} /></div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><ActivityKpiCard title="reuniões realizadas" value={activityKpiData.reunioesRealizadas} iconBgColor="bg-teal-100" icon={Icons.check} /><ActivityKpiCard title="vendas" value={activityKpiData.vendas} iconBgColor="bg-lime-100" icon={Icons.money} /><ActivityKpiCard title="valor vendido" value={closedWonValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} iconBgColor="bg-emerald-100" icon={Icons.money} /></div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8"><div className="bg-brand-base-white p-6 rounded-lg shadow-md"><h3 className="text-lg font-semibold text-brand-text-dark mb-4">Funil de Vendas</h3><div className="space-y-3">{Object.entries(funnelData).map(([stage, count]) => (<div key={stage}><div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-600">{stage}</span><span className="font-bold text-brand-text-dark">{count}</span></div><div className="w-full bg-brand-base-gray rounded-full h-2.5"><div className="bg-gradient-to-r from-brand-coral to-pink-400 h-2.5 rounded-full" style={{ width: `${(prospects || []).length > 0 ? (count / (prospects || []).length) * 100 : 0}%` }}></div></div></div>))}</div></div><div className="bg-brand-base-white p-6 rounded-lg shadow-md"><h3 className="text-lg font-semibold text-brand-text-dark mb-4">Ranking de Vendas</h3><ul className="space-y-4">{salesLeaderboardData.slice(0,5).map((u, index) => (<li key={u.id} className="flex items-center space-x-4 p-2 rounded-lg hover:bg-gray-50"><span className="text-lg font-bold text-gray-400 w-5">#{index+1}</span><span className="text-4xl">{u.avatar}</span><div className="flex-1"><p className="font-bold text-brand-text-dark">{u.name}</p><p className="text-sm text-gray-500">{u.salesCount} vendas</p></div><p className="text-lg font-semibold text-green-600">{u.totalValue.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</p></li>))}</ul></div></div>
+
+                <RankingPodium leaderboard={leaderboardData} />
+
+            </div>);
+
+        }
+
+
+
+        function App() {
+
+            // Estados
+
+            const [user, setUser] = useState(null);
+
+            const [profile, setProfile] = useState(null);
+
+            const [isLoading, setIsLoading] = useState(true);
+
+            const [email, setEmail] = useState("");
+
+            const [password, setPassword] = useState("");
+
+            const [prospects, setProspects] = useState([]);
+
+            const [tasks, setTasks] = useState([]);
+
+            const [users, setUsers] = useState([]);
+
+            const [allTags, setAllTags] = useState([]);
+
+            const [view, setView] = useState('kanban');
+
+            const [showConfetti, setShowConfetti] = useState(false);
+
+            const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+            const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+            const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+            const [selectedProspect, setSelectedProspect] = useState(null);
+
+            const [selectedIds, setSelectedIds] = useState([]);
+
+            const [selectedUserId, setSelectedUserId] = useState('all');
+
+
+
+            const fetchInitialData = async (currentUserId) => { setIsLoading(true); await Promise.all([fetchProspects(), fetchTasks(), fetchProfiles(currentUserId), fetchTags()]); setIsLoading(false); };
+
+            const fetchProspects = async () => { const { data, error } = await supabase.from('CRM DADOS').select('*'); if (error) console.error("Erro ao buscar prospects:", error.message); else setProspects(data || []); };
+
+            const fetchTasks = async () => { const { data, error } = await supabase.from('tasks').select('*'); if (error) console.error("Erro ao buscar tarefas:", error.message); else setTasks(data || []); };
+
+            const fetchProfiles = async (currentUserId) => { const { data, error } = await supabase.from('profiles').select('*'); if (error) console.error("Erro ao buscar perfis:", error.message); else { setUsers(data || []); const currentUserProfile = (data || []).find(p => p.id === currentUserId); setProfile(currentUserProfile); } };
+
+            const fetchTags = async () => { const { data, error } = await supabase.from('tags').select('*'); if (error) console.error("Erro ao buscar tags:", error.message); else setAllTags(data || []); };
+
+
+
+            useEffect(() => {
+
+                const checkSession = async () => {
+
+                    const { data: { session } } = await supabase.auth.getSession();
+
+                    setUser(session?.user ?? null);
+
+                    if (!session?.user) setIsLoading(false);
+
+                };
+
+                checkSession();
+
+                const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => { setUser(session?.user ?? null); if (!session?.user) setIsLoading(false); });
+
+                return () => authListener.subscription.unsubscribe();
+
+            }, []);
+
+
+
+            useEffect(() => {
+
+                if(user){
+
+                    const setupData = async () => {
+
+                        setIsLoading(true);
+
+                        const { data: prospectsData, error: prospectsError } = await supabase.from('CRM DADOS').select('*', { count: 'exact' });
+
+                        if (prospectsError) {
+
+                            console.error("Erro ao buscar prospects:", prospectsError.message);
+
+                            setIsLoading(false);
+
+                            return;
+
+                        }
+
+                        
+
+                        if (prospectsData && prospectsData.length === 0) {
+
+                            await seedInitialData(user.id);
+
+                        } else {
+
+                           await fetchInitialData(user.id);
+
+                        }
+
+                    };
+
+                    setupData();
+
+                }
+
+            }, [user]);
+
+            
+
+            const seedInitialData = async (userId) => {
+
+                 const sampleProspects = [
+
+                    { name: 'Empresa de Software Exemplo', contact_name: 'Ana Paula', value: 25000, status: 'Novo', user_id: userId, email: 'ana.paula@software.com', phone: '(11) 91111-2222', edit_history:[], tags: ['Hot Lead'] },
+
+                    { name: 'Marketing Criativo Ltda', contact_name: 'Bruno Carvalho', value: 12000, status: 'Contato Inicial', user_id: userId, email: 'bruno.c@mkt.com', phone: '(21) 92222-3333', edit_history:[], tags: ['Follow-up'] },
+
+                    { name: 'Logística Total Express', contact_name: 'Carlos Dantas', value: 45000, status: 'Contato com Decisor', user_id: userId, email: 'carlos.dantas@log.com', phone: '(31) 93333-4444', edit_history:[], tags: [] },
+
+                    { name: 'Consultoria Financeira Futuro', contact_name: 'Daniela Costa', value: 75000, status: 'Proposta Enviada', user_id: userId, email: 'daniela@consultoria.com', phone: '(41) 94444-5555', edit_history:[], tags: ['Urgente'] }
+
+                ];
+
+                const { error } = await supabase.from('CRM DADOS').insert(sampleProspects);
+
+                if (error) { console.error('Erro ao inserir dados de exemplo:', error); }
+
+                await fetchInitialData(userId);
+
+            };
+
+            
+
+            const handleLogin = async (e) => { e.preventDefault(); try { const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) throw error; } catch (error) { alert(error.message); } };
+
+            const handleLogout = async () => { await supabase.auth.signOut(); };
+
+            const handleCardClick = (prospect) => { setSelectedProspect(prospect); setIsEditModalOpen(true); };
+
+            const handleNewProspectClick = () => { setIsAddModalOpen(true); };
+
+            const handleCloseModals = () => { setIsAddModalOpen(false); setIsEditModalOpen(false); setSelectedProspect(null); };
+
+            const triggerCelebration = () => { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 4000); };
+
+            const handleSelectProspect = (id) => { setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]); };
+
+
+
+            const handleStatusChange = async (prospectId, newStatus) => { 
+
+                const prospect = prospects.find(p => p.id === prospectId);
+
+                if (newStatus === 'Venda' && prospect.status !== 'Proposta Enviada') {
+
+                    alert('Ação bloqueada: Um prospect só pode ir para "Venda" após ter uma "Proposta Enviada".'); return;
+
+                }
+
+                if (prospect && prospect.status !== 'Venda' && newStatus === 'Venda') triggerCelebration();
+
+                setProspects(prev => prev.map(p => p.id === prospectId ? { ...p, status: newStatus } : p));
+
+                const { error } = await supabase.from('CRM DADOS').update({ status: newStatus }).eq('id', prospectId);
+
+                if (error) { alert("Erro ao atualizar o status."); await fetchProspects(); }
+
+            };
+
+
+
+            const handleSaveProspect = async (savedProspect, shouldClose = true) => {
+
+                const isCreating = !savedProspect.id;
+
+                const originalProspect = isCreating ? null : prospects.find(p => p.id === savedProspect.id);
+
+                if (!isCreating && savedProspect.status === 'Venda' && originalProspect?.status !== 'Proposta Enviada') {
+
+                    alert('Não é possível alterar o status para "Venda" sem antes estar em "Proposta Enviada".'); return false;
+
+                }
+
+                
+
+                const dataToSave = { ...savedProspect, user_id: user.id };
+
+                let error;
+
+
+
+                if (isCreating) {
+
+                    delete dataToSave.id;
+
+                    ({ error } = await supabase.from('CRM DADOS').insert(dataToSave).select());
+
+                } else {
+
+                    const changeLog = [];
+
+                    for (const key in savedProspect) { if (originalProspect && originalProspect[key] !== savedProspect[key]) { changeLog.push({ field: key, oldValue: originalProspect[key], newValue: savedProspect[key], timestamp: new Date().toISOString() }); } }
+
+                    const updatedData = { ...savedProspect, edit_history: [...(originalProspect.edit_history || []), ...changeLog]};
+
+                    delete updatedData.id;
+
+                    ({ error } = await supabase.from('CRM DADOS').update(updatedData).eq('id', savedProspect.id));
+
+                }
+
+
+
+                if (error) { alert("Erro ao salvar prospect: " + error.message); return false; }
+
+
+
+                if (savedProspect.status === 'Venda' && originalProspect?.status !== 'Venda') triggerCelebration();
+
+                await fetchProspects();
+
+                if (shouldClose) {
+
+                    handleCloseModals();
+
+                } else {
+
+                    alert("Alterações salvas com sucesso!");
+
+                }
+
+                return true;
+
+            };
+
+
+
+            const handleRegisterCadence = async (prospect, actions) => { 
+
+                if (actions.includes('Venda')) {
+
+                    if (prospect.status !== 'Proposta Enviada') {
+
+                        alert('Ação bloqueada: Um prospect só pode ir para "Venda" após ter uma "Proposta Enviada".'); return;
+
+                    }
+
+                    await handleStatusChange(prospect.id, 'Venda');
+
+                }
+
+                const newTask = { prospect_id: prospect.id, user_id: user.id, description: `Cadência: ${actions.join(', ')}`, due_date: new Date().toISOString().split('T')[0], completed: true, type: 'Cadência' }; 
+
+                const { error } = await supabase.from('tasks').insert(newTask);
+
+                if (error) { alert("Erro ao registrar cadência: " + error.message); }
+
+                else { alert(`${actions.length} ações registadas como 1 cadência para ${prospect.name}!`); await fetchTasks(); }
+
+            };
+
+
+
+            const handleTaskToggle = async (taskId) => {
+
+                const task = tasks.find(t => t.id === taskId);
+
+                const { error } = await supabase.from('tasks').update({ completed: !task.completed }).eq('id', taskId);
+
+                if (error) { alert("Erro ao atualizar tarefa."); }
+
+                else { await fetchTasks(); }
+
+            };
+
+            
+
+            const handleAddTask = async (prospect, description, dueDate) => { 
+
+                const newTask = { prospect_id: prospect.id, user_id: user.id, description, due_date: dueDate, completed: false, type: 'Follow-up' }; 
+
+                const { error } = await supabase.from('tasks').insert(newTask);
+
+                if(error) { alert(`Erro ao agendar tarefa: ${error.message}`); }
+
+                else { alert(`Tarefa '${description}' agendada para ${prospect.name}.`); await fetchTasks(); }
+
+            };
+
+
+
+            const handleDragStart = (e, prospectId) => e.dataTransfer.setData("prospectId", prospectId);
+
+            
+
+            const handleImportSuccess = async (data, mapping) => {
+
+                const existingEmails = prospects.map(p => p.email).filter(Boolean);
+
+                const newProspectsData = data.map(record => {
+
+                    let newProspect = { user_id: user.id, edit_history: [], status: 'Novo' };
+
+                    for (const header in mapping) {
+
+                        const crmField = mapping[header];
+
+                        if (crmField) { newProspect[crmField] = record[header]; }
+
+                    }
+
+                    return newProspect;
+
+                }).filter(p => p.email && !existingEmails.includes(p.email));
+
+
+
+                if (newProspectsData.length > 0) {
+
+                    const { error } = await supabase.from('CRM DADOS').insert(newProspectsData);
+
+                    if (error) {
+
+                        alert("Erro ao importar contatos: " + error.message);
+
+                    } else {
+
+                        alert(`${newProspectsData.length} contatos importados com sucesso!`);
+
+                        await fetchProspects();
+
+                    }
+
+                } else {
+
+                    alert("Nenhum contato novo para importar (podem ser duplicados ou não ter e-mail).");
+
+                }
+
+            };
+
+            
+
+            const handleDeleteProspect = async (prospectId) => {
+
+                const { error } = await supabase.from('CRM DADOS').delete().eq('id', prospectId);
+
+                if (error) {
+
+                    alert("Erro ao excluir prospect: " + error.message);
+
+                } else {
+
+                    alert("Prospect excluído com sucesso.");
+
+                    handleCloseModals();
+
+                    await fetchProspects();
+
+                }
+
+            };
+
+
+
+             const handleAddObservation = async (prospect, observationText) => {
+
+                const newObservation = {
+
+                    field: 'observation',
+
+                    content: observationText,
+
+                    timestamp: new Date().toISOString()
+
+                };
+
+
+
+                const currentHistory = prospect.edit_history || [];
+
+                const updatedHistory = [...currentHistory, newObservation];
+
+
+
+                const { error } = await supabase.from('CRM DADOS').update({ edit_history: updatedHistory }).eq('id', prospect.id);
+
+
+
+                if (error) {
+
+                    alert("Erro ao salvar observação: " + error.message);
+
+                } else {
+
+                    await fetchProspects(); 
+
+                    setSelectedProspect(prev => ({...prev, edit_history: updatedHistory}));
+
+                }
+
+            };
+
+            
+
+            const filteredData = useMemo(() => {
+
+                if (profile?.role === 'admin' && selectedUserId !== 'all') {
+
+                    return prospects.filter(p => p.user_id === selectedUserId);
+
+                }
+
+                return prospects;
+
+            }, [prospects, selectedUserId, profile]);
+
+            
+
+            const filteredTasksForViews = useMemo(() => {
+
+                if (profile?.role === 'admin' && selectedUserId !== 'all') {
+
+                    return tasks.filter(t => t.user_id === selectedUserId);
+
+                }
+
+                return tasks;
+
+            }, [tasks, selectedUserId, profile]);
+
+            
+
+            const renderView = () => {
+
+                const props = { prospects: filteredData, users, tasks: filteredTasksForViews, onCardClick: handleCardClick, handleDragStart, onStatusChange: handleStatusChange, onSelect: handleSelectProspect, selectedIds, onTaskToggle: handleTaskToggle, profile, selectedUserId, setSelectedUserId, allTags };
+
+                switch (view) {
+
+                    case 'kanban': return <KanbanView {...props} />;
+
+                    case 'list': return <ListView {...props} />;
+
+                    case 'tasks': return <TasksView {...props} />;
+
+                    case 'dashboard': default: return <DashboardView {...props} />;
+
+                }
+
+            };
+
+            
+
+            const NavButton = ({ viewName, icon, children }) => ( <button onClick={() => setView(viewName)} className={`flex items-center space-x-2 px-4 py-2 rounded-lg border-2 transition-colors duration-200 text-sm font-semibold ${view === viewName ? 'bg-brand-logo-coral border-brand-logo-coral text-white' : 'bg-brand-header-blue border-white text-white hover:bg-white hover:text-brand-header-blue'}`}>{icon}<span className="lowercase">{children}</span></button> );
+
+
+
+            if (isLoading) return <div className="loading-container text-2xl font-semibold">Carregando...</div>;
+
+            
+
+            if (!user) {
+
+                return (
+
+                    <div className="login-container">
+
+                        <form onSubmit={handleLogin} className="p-8 bg-white rounded-lg shadow-xl w-full max-w-sm space-y-4">
+
+                             <h2 className="text-2xl font-bold text-center text-gray-800">NG PROSPECT</h2>
+
+                             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" required className="w-full p-3 border rounded text-gray-800" />
+
+                             <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Senha" required className="w-full p-3 border rounded text-gray-800" />
+
+                             <button type="submit" className="w-full p-3 bg-brand-coral text-white rounded font-bold hover:bg-brand-coral-dark">Entrar</button>
+
+                        </form>
+
+                    </div>
+
+                );
+
+            }
+
+
+
+            return (
+
+                <Fragment>
+
+                    {showConfetti && <Confetti />}
+
+                    <AddProspectModal isOpen={isAddModalOpen} onClose={handleCloseModals} onSave={handleSaveProspect} users={users} currentUserId={user.id} />
+
+                    <EditProspectModal isOpen={isEditModalOpen} onClose={handleCloseModals} prospect={selectedProspect} users={users} tasks={tasks} onSave={handleSaveProspect} onRegisterCadence={handleRegisterCadence} onAddTask={handleAddTask} onDelete={handleDeleteProspect} onAddObservation={handleAddObservation}/>
+
+                    <ImportModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onImportSuccess={handleImportSuccess} />
+
+                    <div className="h-screen w-screen flex flex-col bg-slate-100">
+
+                        <header className="bg-brand-header-blue p-4 flex justify-between items-center flex-shrink-0">
+
+                            <h1 className="text-xl font-bold text-brand-logo-coral uppercase tracking-wider">NG Prospect</h1>
+
+                            <nav className="flex items-center space-x-2">
+
+                               <NavButton viewName="dashboard" icon={Icons.dashboard}>dashboard</NavButton>
+
+                               <NavButton viewName="kanban" icon={Icons.kanban}>kanban</NavButton>
+
+                               <NavButton viewName="list" icon={Icons.list}>lista</NavButton>
+
+                               <NavButton viewName="tasks" icon={Icons.tasks}>tarefas</NavButton>
+
+                            </nav>
+
+                            <div className="flex items-center space-x-4">
+
+                                <button onClick={handleNewProspectClick} className="px-4 py-2 bg-brand-logo-coral text-white rounded-lg font-semibold hover:bg-opacity-90 shadow-sm hover:shadow-lg transition-all lowercase">novo contato</button>
+
+                                <button onClick={() => setIsImportModalOpen(true)} className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg font-semibold hover:bg-white/20 transition-all lowercase">importar</button>
+
+                                <button onClick={handleLogout} className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg font-semibold hover:bg-white/20 transition-all lowercase">Sair</button>
+
+                                <span className="text-3xl" title={profile?.name || user.email}>{profile?.avatar || '👤'}</span>
+
+                            </div>
+
+                        </header>
+
+                        <main className="flex-1 overflow-y-auto">{renderView()}</main>
+
+                    </div>
+
+                </Fragment>
+
+            );
+
+        }
+
+        
+
+        // --- Ponto de Entrada do React ---
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+
+        root.render(<App />);
+
+
+
+    </script>
+
 </body>
+
 </html>
